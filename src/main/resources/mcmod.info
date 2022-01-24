@@ -1,0 +1,16 @@
+[
+{
+  "modid": "mcinstanceloader",
+  "name": "MCInstance Loader",
+  "description": "A small mod that allows Forge to load a modpack in the .mcinstance format.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["HRudyPlayZ"],
+  "credits": "AstroTibs for OptionsEnforcer along with Janrupf and HansWasser for ModDirector.",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

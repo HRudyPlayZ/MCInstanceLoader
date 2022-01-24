@@ -1,3 +1,5 @@
+# ========= STANDARD JAVA GITIGNORE =========
+
 # Compiled class file
 *.class
 
@@ -21,3 +23,46 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+
+# ===== INTELLIJ =====
+out/
+*.iml
+*.ipr
+*.iws
+.idea/
+
+
+# ===== ECLIPSE =====
+*.pydevproject
+.project
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.classpath
+.settings/
+.loadpath
+.gradle/
+eclipse/
+
+# External tool builders
+.externalToolBuilders/
+
+# Locally stored "Eclipse launch configurations"
+*.launch
+
+# CDT-specific
+.cproject
+
+# PDT-specific
+.buildpath
+
+
+# ===== MINECRAFT =====
+minecraft/
+build/
