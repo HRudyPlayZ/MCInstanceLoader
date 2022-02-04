@@ -53,7 +53,7 @@ public class PackConfigParser {
                 // Defines the behavior to do on each object depending on which property gets modified (incorrect properties will get ignored).
                 switch (property) {
                     case "type":
-                        resource.type = value;
+                        resource.type = value.toLowerCase();
                         break;
 
                     case "url":
