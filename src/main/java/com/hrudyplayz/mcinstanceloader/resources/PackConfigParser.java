@@ -6,6 +6,7 @@ import com.hrudyplayz.mcinstanceloader.utils.LogHelper;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class PackConfigParser {
 // This class acts as the .packconfig parser. Every separate use would be declared as a new method.
@@ -86,7 +87,7 @@ public class PackConfigParser {
                         break;
 
                     case "side":
-                        resource.side = value;
+                        resource.side = value.toLowerCase();
                         break;
 
                     case "SHA512": // Allows to type either SHA512 or SHA-512.

@@ -12,6 +12,9 @@
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
+# Libs folder for Gradle
+libs/
+
 # Package Files #
 *.jar
 *.war

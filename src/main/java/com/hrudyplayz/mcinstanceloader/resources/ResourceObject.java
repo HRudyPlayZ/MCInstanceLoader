@@ -183,18 +183,13 @@ public class ResourceObject {
                 }
 
                 // If it fails or the source file name wasn't specified, it will use Curseforge's API to try and get the file instead.
-                if (!WebHelper.downloadFile("https://addons-ecs.forgesvc.net/api/v2/addon/" + this.projectId + "/file/" + this.fileId, Config.configFolder + "temp" + File.separator + "moddata.json")) {
+                if (!WebHelper.downloadFile("https://addons-ecs.forgesvc.net/api/v2/addon/" + this.projectId + "/file/" + this.fileId + "/download-url", Config.configFolder + "temp" + File.separator + "filedata.txt")) {
                     Main.errorContext = "Error while getting the file from Curseforge.";
                     return false;
                 }
 
-                // Grabs the JSON response from the server.
-                String data = FileHelper.listLines(Config.configFolder + "temp" + File.separator + "moddata.json")[0];
-
-                Pattern pattern = Pattern.compile("(?<=\"downloadUrl\":\").*?(?=\")"); // Grabs the download URL without requiring an entire JSON parser.
-                Matcher matcher = pattern.matcher(data);
-                if (matcher.find()) this.url = matcher.group();
-                else this.url = ""; // If somehow no URL was found, it gives it an empty one.
+                // Grabs the download URL response from the server (without requiring an entire JSON parser).
+                this.url = FileHelper.listLines(Config.configFolder + "temp" + File.separator + "filedata.txt")[0];
 
                 this.follows = new String[0]; // Sets the follows list to be empty, so the WebHelper class doesn't try to follow it if the user specified it.
             }
@@ -207,13 +202,13 @@ public class ResourceObject {
 
                 this.url = ""; // Sets the URL to be empty if nothing worked.
 
-                if (!WebHelper.downloadFile("https://api.modrinth.com/api/v1/version/" + this.versionId, Config.configFolder + "temp" + File.separator + "moddata.json")) {
+                if (!WebHelper.downloadFile("https://api.modrinth.com/api/v1/version/" + this.versionId, Config.configFolder + "temp" + File.separator + "filedata.json")) {
                     Main.errorContext = "Error while getting the file from Modrinth.";
                     return false;
                 }
 
                 // Grabs the JSON response from the server.
-                String data = FileHelper.listLines(Config.configFolder + "temp" + File.separator + "moddata.json")[0];
+                String data = FileHelper.listLines(Config.configFolder + "temp" + File.separator + "filedata.json")[0];
                 data = data.substring(data.indexOf("\"files\""), data.indexOf(",\"dependencies\""));
 
                 ArrayList<String> fileUrls = new ArrayList<>();
@@ -231,11 +226,9 @@ public class ResourceObject {
             // If it didn't download it from before (so either it's not of curseforge type, the resource didn't have a sourceFileName specified, or the direct download failed),
             // it will download it here. Anything other than the curseforge or modrinth type will directly go here.
 
-            boolean result;
-            if (this.follows.length <= 0) result = WebHelper.downloadFile(this.url, this.destination);
-            else result = WebHelper.downloadFile(this.url, this.destination, this.follows);
+            if (this.follows.length <= 0) return WebHelper.downloadFile(this.url, this.destination);
+            else return WebHelper.downloadFile(this.url, this.destination, this.follows);
 
-            return result;
         }
 
         return true; // If the side doesn't correspond, it succesfully skipped it.
