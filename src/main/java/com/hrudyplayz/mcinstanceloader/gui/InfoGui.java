@@ -25,8 +25,6 @@ import com.hrudyplayz.mcinstanceloader.ModProperties;
 public class InfoGui extends GuiScreen {
 // This class defines the results GUI, in order for it to get displayed.
 
-    private final GuiScreen parentGuiScreen;
-
     // The logo file, displayed on the top.
     public static ResourceLocation logo = new ResourceLocation(ModProperties.MODID, "logo.png");
     private static final int logoWidth = 128, logoHeight = 64;
@@ -49,7 +47,6 @@ public class InfoGui extends GuiScreen {
 
     // Class constructor, used by the GuiOpenEventHandler class.
     public InfoGui(GuiScreen parentGuiScreen) {
-        this.parentGuiScreen = parentGuiScreen;
     }
 
 

@@ -2,11 +2,9 @@ package com.hrudyplayz.mcinstanceloader.resources;
 
 import com.hrudyplayz.mcinstanceloader.Config;
 import com.hrudyplayz.mcinstanceloader.utils.FileHelper;
-import com.hrudyplayz.mcinstanceloader.utils.LogHelper;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Locale;
 
 public class PackConfigParser {
 // This class acts as the .packconfig parser. Every separate use would be declared as a new method.

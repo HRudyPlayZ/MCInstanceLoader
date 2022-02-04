@@ -3,9 +3,6 @@ package com.hrudyplayz.mcinstanceloader.utils;
 import java.io.*;
 import java.util.List;
 
-import com.hrudyplayz.mcinstanceloader.utils.FileHelper;
-import com.hrudyplayz.mcinstanceloader.utils.LogHelper;
-
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.FileHeader;
 import net.lingala.zip4j.model.ZipParameters;
