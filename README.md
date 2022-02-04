@@ -7,7 +7,7 @@
 A small mod to allow Minecraft to directly install a modpack in the .mcinstance format, a simplified distribution format for modpacks. It lets people download files, bundle overrides and much more. The game asks for a reboot after installation and disables the mcinstance file to let the game restart properly.
 
 # This is the 1.7.10 branch.
-If you want to look at the source for other branches, check out [this page](https://github.com/HRudyPlayZ/MCInstanceLoader/tree/).
+If you want to look at the source for other branches, check out [this page](https://github.com/HRudyPlayZ/MCInstanceLoader/).
 (others might come later on, feel free to help port the mod to any version you'd like. Forge, Fabric, 1.16, 1.3.2, anything, this mod is MIT licensed after all.)
 
 ## So basically what is the .mcinstance format?
