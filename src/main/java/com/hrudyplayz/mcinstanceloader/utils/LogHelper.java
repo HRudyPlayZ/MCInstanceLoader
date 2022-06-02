@@ -7,6 +7,7 @@ import com.hrudyplayz.mcinstanceloader.ModProperties;
 
 import java.time.LocalDateTime;
 
+@SuppressWarnings("unused")
 public class LogHelper {
 // This class is used to handle both printing to the game's logs, and outputing to mod log file.
 

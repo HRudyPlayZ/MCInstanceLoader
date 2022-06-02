@@ -15,7 +15,6 @@ import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.io.FileUtils;
 
 
-
 public class FileHelper {
 // This class aims to make file management less stupid than it is by default.
 
@@ -223,6 +222,8 @@ public class FileHelper {
         }
 
         catch (IOException e) {
+            LogHelper.info("You had an IOException while calling the copy method.");
+            e.printStackTrace();
             return false;
         }
     }

@@ -13,7 +13,7 @@ import com.hrudyplayz.mcinstanceloader.Main;
 import com.hrudyplayz.mcinstanceloader.Config;
 import com.hrudyplayz.mcinstanceloader.utils.LogHelper;
 
-
+@SuppressWarnings("unused")
 public class GuiOpenEventHandler {
 // This class is the hook used to determine whenever a GUI gets displayed.
 

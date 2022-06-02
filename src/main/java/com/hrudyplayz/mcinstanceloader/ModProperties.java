@@ -1,18 +1,16 @@
 package com.hrudyplayz.mcinstanceloader;
 
-import java.io.File;
-
 import net.minecraft.util.EnumChatFormatting;
 
 
-
+@SuppressWarnings("unused")
 public class ModProperties {
 // This class will be used to define mod properties in order to access them from anywhere.
 
     // General values
     public static final String MODID = "mcinstanceloader";
     public static final String NAME = "MCInstance Loader";
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "2.0";
     public static final String MC_VERSION = "1.7.10";
     public static final String URL = "";
     public static final String VERSION_CHECKER_URL = "";
@@ -69,5 +67,5 @@ public class ModProperties {
     };
 
     // Should be equal to null to disable it, otherwise it should just be the file name (ex: "logo.png").
-    public static String LOGO = "assets" + File.separator + ModProperties.MODID + File.separator + "logo.png";
+    public static String LOGO = "assets/" + ModProperties.MODID + "/logo.png";
 }

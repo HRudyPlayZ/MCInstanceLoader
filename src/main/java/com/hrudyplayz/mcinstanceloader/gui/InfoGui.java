@@ -22,6 +22,7 @@ import com.hrudyplayz.mcinstanceloader.Config;
 
 import com.hrudyplayz.mcinstanceloader.ModProperties;
 
+@SuppressWarnings("unused")
 public class InfoGui extends GuiScreen {
 // This class defines the results GUI, in order for it to get displayed.
 

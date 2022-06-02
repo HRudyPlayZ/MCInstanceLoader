@@ -77,6 +77,9 @@ public class PackConfigParser {
                     case "sourceFileName":
                         resource.sourceFileName = value;
                         break;
+                    case "optionalGroupName":
+                        resource.optionalGroupName = value;
+                        break;
 
                     case "destination": // Replaces every separator with the system one and sets the download path to be in the temp folder (to ensure file safety).
                         value = value.replace("\\", File.separator);

@@ -1,9 +1,9 @@
 package com.hrudyplayz.mcinstanceloader.resources;
 
-import org.lwjgl.Sys;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -158,35 +158,9 @@ public class ResourceObject {
         return true; // If there wasn't any check failing and returning false before, this probably means the hash is correct.
     }
 
-    public boolean hasHash() {
-    // Returns whether the resource has any configured hash attached or not.
 
-        return this.CRC32 != null || this.MD5 != null || this.SHA1 != null || this.SHA256 != null || this.SHA512 != null;
-    }
-
-
-    public boolean checkCache() {
-    // Checks the cache folder to not have to redownload mods everytime.
-    // If the mod is already cached, it will just copy the file to the given destination instead.
-
-        if (Config.disableCache || !hasHash()) return false;
-
-        String[] files = FileHelper.listDirectory("mcinstance-cache", false);
-        for (String s : files) {
-            if (this.SHA512 != null && s.equalsIgnoreCase("SHA512-" + this.SHA512)) return FileHelper.copy("mcinstance-cache" + File.separator + s, this.destination, true);
-            if (this.SHA256 != null && s.equalsIgnoreCase("SHA256-" + this.SHA256)) return FileHelper.copy("mcinstance-cache" + File.separator + s, this.destination, true);
-            if (this.SHA1 != null && s.equalsIgnoreCase("SHA1-" + this.SHA1)) return FileHelper.copy("mcinstance-cache" + File.separator + s, this.destination, true);
-            if (this.MD5 != null && s.equalsIgnoreCase("MD5-" + this.MD5)) return FileHelper.copy("mcinstance-cache" + File.separator + s, this.destination, true);
-            if (this.CRC32 != null && s.equalsIgnoreCase("CRC32-" + this.CRC32)) return FileHelper.copy("mcinstance-cache" + File.separator + s, this.destination, true);
-        }
-
-        return false;
-    }
-
-
-    private boolean genCurseforgeUrl() {
-    // Tries to generate the curseforge URL in case the resource's API usage is disabled or if the sourceFilename and fileId are provided.
-    // Returns true if the download was succesful.
+    private boolean getCurseforgeUrl() {
+    // Tries to grab the curseforge URL in case the resource's API usage is disabled or if the sourceFilename and fileId are provided.
 
         if (this.sourceFileName != null && this.fileId != null) {
             try {
@@ -200,129 +174,9 @@ public class ResourceObject {
         return false;
     }
 
-
-    private boolean getCurseforgeData() {
-    // Grabs some properties for Curseforge downloads.
-    // This is still using the old API as thankfully it still works with Twitch's user agent as of now. Might have to switch to a proxy later on.
-    // This project cannot rely on CFCore as there's both the needs to hide the API key and to download "opted-out" files and Overwolf doesn't propose any solution for those issues.
-
-        String apiUrl = "https://addons-ecs.forgesvc.net/api/v2/addon/" + (this.projectId != null? this.projectId : "") + "/file/" + (this.fileId != null? this.fileId : "");
-
-        if (WebHelper.downloadFile(apiUrl, Config.configFolder + "temp" + File.separator + "curseforgeData.json")) {
-            String file = FileHelper.listLines(Config.configFolder + "temp" + File.separator + "curseforgeData.json")[0];
-            String[] splitted;
-
-            // Download URL
-            if (file.contains("downloadUrl")) {
-                splitted = file.split("\"downloadUrl\":\"");
-                String url = "";
-                if (splitted.length >= 2) {
-                    url = splitted[1];
-                    url = url.substring(0, url.indexOf("\""));
-                }
-                if (url.length() >= 1) this.url = url;
-            }
-
-            // Source file name
-            if (this.sourceFileName == null && file.contains("fileName")) {
-                splitted = file.split("\"fileName\":\"");
-                String fileName = "";
-                if (splitted.length >= 2) {
-                    fileName = splitted[1];
-                    fileName = fileName.substring(0, fileName.indexOf("\""));
-                }
-                if (fileName.length() >= 1) this.sourceFileName = fileName;
-            }
-
-            // SHA1 hash
-            if (this.SHA1 == null && file.contains("\"hashes\":[{\"algorithm\":1,\"value\":\"")) {
-                splitted = file.split("\"hashes\":\\[\\{\"algorithm\":1,\"value\":\"");
-                String sha1 = "";
-                if (splitted.length >= 2) {
-                    sha1 = splitted[1];
-                    sha1 = sha1.substring(0, sha1.indexOf("\""));
-                }
-                if (sha1.length() >= 1) this.SHA1 = sha1;
-            }
-
-            if (this.url.length() > 0 && this.sourceFileName != null && this.SHA1 != null) return true;
-        }
-
-        return false;
-    }
-
-
-    public boolean getModrinthData() {
-    // Grabs some properties for Modrinth downloads.
-    // Uses the v2 API. Might be subject to change.
-
-        String apiUrl = "https://api.modrinth.com/v2/version/" + (this.versionId != null? this.versionId : "");
-        if (WebHelper.downloadFile(apiUrl, Config.configFolder + "temp" + File.separator + "modrinthData.json")) {
-            String file = FileHelper.listLines(Config.configFolder + "temp" + File.separator + "modrinthData.json")[0];
-
-            if (file.contains("\"files\":")) {
-                file = file.split("\"files\":\\[\\{")[1];
-                file = file.substring(0, file.indexOf("]"));
-
-                String[] files = file.split("\\},\\{");
-
-                file = "";
-                for (String s : files) { // Grabs the file that matches the given file name.
-                    if (s.contains("\"filename\":\"" + this.sourceFileName + "\"") || files.length == 1) {
-                        file = s;
-                        break;
-                    }
-                }
-                if (file.length() < 1) return false;
-
-                String[] splitted;
-
-                // Download URL
-                if (file.contains("url")) {
-                    splitted = file.split("\"url\":\"");
-                    String url = "";
-                    if (splitted.length >= 2) {
-                        url = splitted[1];
-                        url = url.substring(0, url.indexOf("\""));
-                    }
-                    if (url.length() >= 1) this.url = url;
-                }
-
-                // SHA1 hash
-                if (this.SHA1 == null && file.contains("\"sha1\":\"")) {
-                    splitted = file.split("\"sha1\":\"");
-                    String sha1 = "";
-                    if (splitted.length >= 2) {
-                        sha1 = splitted[1];
-                        sha1 = sha1.substring(0, sha1.indexOf("\""));
-                    }
-                    if (sha1.length() >= 1) this.SHA1 = sha1;
-                }
-
-                // SHA512 hash
-                if (this.SHA512 == null && file.contains("\"sha512\":\"")) {
-                    splitted = file.split("\"sha512\":\"");
-                    String sha512 = "";
-                    if (splitted.length >= 2) {
-                        sha512 = splitted[1];
-                        sha512 = sha512.substring(0, sha512.indexOf("\""));
-                    }
-                    if (sha512.length() >= 1) this.SHA512 = sha512;
-                }
-
-                if (this.url.length() > 0 && this.SHA1 != null && this.SHA512 != null) return true;
-            }
-        }
-
-        return false;
-    }
-
-
     public boolean downloadFile() {
     // Downloads the file based on the given parameters and saves it to the destination path.
     // Also checks the URL against the StopModReposts list.
-
-        if (checkCache()) return true;
 
         // Checks the URL against the StopModReposts list.
         for (int i = 0; i < Main.blacklist.length; i += 1) {
@@ -337,18 +191,45 @@ public class ResourceObject {
            (!this.side.equals("client") && !this.side.equals("server"))) {
 
             // Support for curseforge's API.
+            // Might need to be changed if Overwolf really messes with the API at some point.
             if (this.type.equals("curseforge")) {
 
-                // If the file already has hashes defined and is already in cache, it won't do any request.
-                if (this.hasHash() && this.checkCache()) return true;
+                // If the file name hosted on curseforge's servers has been specified, it will try to download the file using the direct link from Curseforge
+                // and return true if it worked.
+                if (getCurseforgeUrl()) return true;
 
-                // If the mod can generate the download URL without doing any API call, it will do that instead.
-                if (projectId == null && genCurseforgeUrl()) return true;
+                // If it fails or the source file name wasn't specified, it will try to use a proxy of the Curseforge's API instead.
+                // This is because Curseforge now abandonned its previous API, and using CFCore will be pain as i can't afford to buy a server to hide the key.
+                // curse.tools is cached.
+                String apiUrl = "https://api.curse.tools/v1/cf/mods/" + this.projectId +  "/files/" + this.fileId;
+                if (WebHelper.downloadFile(apiUrl, Config.configFolder + "temp" + File.separator + "filedata.txt")) {
+                    // Grabs the download URL response from the server (without requiring an entire JSON parser).
 
-                // Otherwise, it will use the Curseforge API to grab stuff like the download url, file name and SHA-1 hash.
-                if (getCurseforgeData()) {
-                    if (checkCache()) return true; // If the file is already cached using this downloaded hash, it won't download anything else.
-                    if (genCurseforgeUrl()) return true; // If the mod was able to generate a download URL from those properties, it will use it.
+                    String file = FileHelper.listLines(Config.configFolder + "temp" + File.separator + "filedata.txt")[0];
+
+                    String[] splitted = file.split("\"downloadUrl\":\"");
+
+                    String url = "";
+                    if (splitted.length >= 2) {
+                        url = splitted[1];
+                        url = url.substring(0, url.indexOf("\""));
+                    }
+
+                    if (url.length() >= 1) this.url = url;
+                    else {
+                        splitted = file.split("\"displayName\":\"");
+
+                        String fileName = "";
+                        if (splitted.length >= 2) {
+                            fileName = splitted[1];
+                            fileName = fileName.substring(0, fileName.indexOf("\""));
+                        }
+
+                        if (splitted.length >= 1) {
+                            this.sourceFileName = fileName;
+                            if (getCurseforgeUrl()) return true;
+                        }
+                    }
                 }
                 else {
                     Main.errorContext = "Error while getting the file data from Curseforge.";
@@ -358,19 +239,30 @@ public class ResourceObject {
                 this.follows = new String[0]; // Sets the follows list to be empty, so the WebHelper class doesn't try to follow it if the user specified it.
             }
 
-
             // Support for Modrinth's API.
+            // It might need to get updated once they switch to their API v2.
+            // Adding a direct download option like curseforge's would require to introduce a new versionName field,
+            // or somehow detect if versionId isn't a valid versionId. Not planned for now but maybe later.
             else if (this.type.equals("modrinth")) {
 
-                // If the file already has hashes defined and is already in cache, it won't do any request.
-                if (this.hasHash() && this.checkCache()) return true;
+                this.url = ""; // Sets the URL to be empty if nothing worked.
 
-                if (getModrinthData()) {
-                    if (checkCache()) return true;
-                }
-                else {
+                if (!WebHelper.downloadFile("https://api.modrinth.com/api/v1/version/" + this.versionId, Config.configFolder + "temp" + File.separator + "filedata.json")) {
                     Main.errorContext = "Error while getting the file from Modrinth.";
                     return false;
+                }
+
+                // Grabs the JSON response from the server.
+                String data = FileHelper.listLines(Config.configFolder + "temp" + File.separator + "filedata.json")[0];
+                data = data.substring(data.indexOf("\"files\""), data.indexOf(",\"dependencies\""));
+
+                ArrayList<String> fileUrls = new ArrayList<>();
+                Pattern pattern = Pattern.compile("(?<=\"url\":\").*?(?=\")"); // Grabs the entire list of links between "files" and "dependencies", without a JSON parser.
+                Matcher matcher = pattern.matcher(data);
+                while (matcher.find()) fileUrls.add(matcher.group());
+
+                for (String s : fileUrls) {
+                    if (s.substring(s.lastIndexOf("/") + 1).equals(sourceFileName)) this.url = s; // if the URL's file name is equals to the given source file name, it assumes it is the wanted file.
                 }
 
                 this.follows = new String[0]; // Sets the follows list to be empty, so the WebHelper class doesn't try to follow it if the user specified it.
@@ -381,6 +273,7 @@ public class ResourceObject {
 
             if (this.follows.length <= 0) return WebHelper.downloadFile(this.url, this.destination);
             else return WebHelper.downloadFile(this.url, this.destination, this.follows);
+
         }
 
         return true; // If the side doesn't correspond, it succesfully skipped it.

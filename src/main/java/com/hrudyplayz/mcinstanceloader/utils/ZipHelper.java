@@ -8,6 +8,7 @@ import net.lingala.zip4j.model.FileHeader;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
 
+@SuppressWarnings("unused")
 public class ZipHelper {
 // This class aims to make zip files management much easier.
 // It utilizes the zip4j library. I would've prefered to not rely on it,
@@ -15,7 +16,7 @@ public class ZipHelper {
 // this guy's work over again, so huge thanks to srikanth-lingala for providing a fairly
 // licensed and easy to use library i could work with.
 
-// The zip4j library is licensed un the Apache License 2.0.
+// The zip4j library is licensed under the Apache License 2.0.
 
 
     public static boolean zip (String input, String outputZip, String password, boolean doNotOverwrite, boolean putContentInSubdirectory) {
