@@ -1,6 +1,8 @@
 package com.hrudyplayz.mcinstanceloader;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Random;
 
@@ -27,11 +29,18 @@ import com.hrudyplayz.mcinstanceloader.gui.GuiOpenEventHandler;
 import com.hrudyplayz.mcinstanceloader.gui.InfoGui;
 
 
-
 @SuppressWarnings("unused")
 @Mod(modid = ModProperties.MODID, name = ModProperties.NAME, version = ModProperties.VERSION)
 public class Main {
 // This class defines the main mod class, and registers stuff like Events.
+
+    //TODO: Cleanup the whole code base a little (add comments and such)
+    //TODO: For the future, consider switching entirely to GUI buttons instead of preInit. Might make things better.
+    //TODO: Add support for removing any mod through the zero-byte technique.
+
+    public static boolean hasUpdate = false; // Used to check whether the mod has an update or not.
+    public static String updateUrl = ""; // Direct link to the mod update.
+    public static String updateFileName = ""; // Name to give to the update file.
 
     public static boolean shouldDoSomething = false; // Creates the shouldDoSomething variable used to check if the mod should display the end GUI.
     public static boolean hasErrorOccured = false; // Creates the hasErrorOccured boolean used to stop next steps from running and tell the GUI if it should be in error/success mode.
@@ -45,6 +54,7 @@ public class Main {
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
     // The preInit event, that gets called as soon as possible in Forge's loading. Basically the entire mod.
+    // First phrase of the mod, gets ran at the game launch.
 
         // ===== STEP 0: The mod's initialisation. =====
         initMod(event);
@@ -53,29 +63,45 @@ public class Main {
         cleanupFiles();
         LogHelper.appendToLog(Level.INFO, "", true); // Adds an empty line to the log file, to make it more readable.
 
-        // ===== STEP 2: MCInstance extraction =====
+        // ===== STEP 2: Check for updates =====
+        updateChecker();
+
+        secondPhase();
+    }
+
+    public static void secondPhase() {
+    // Second phase of the mod, used for the continue option in the update GUI.
+
+        // ===== STEP 3: MCInstance extraction =====
         extractMCInstance();
         errorContext = ""; // Resets the errorContext, so it can be reused for the next step.
         LogHelper.appendToLog(Level.INFO, "", true); // Adds an empty line to the log file, to make it more readable.
 
-        // ===== STEP 3: Zip the pack folder =====
+        // ===== STEP 4: Zip the pack folder =====
         if (!Config.disableAutomaticZipCreation && !FileHelper.exists(Config.configFolder + "pack.mcinstance") && !FileHelper.exists(Config.configFolder + "pack.mcinstance.disabled")) {
             LogHelper.info("No pack.instance file found, created one from the pack folder.");
             ZipHelper.zip(Config.configFolder + "pack", Config.configFolder + "pack.mcinstance");
         }
 
-        // ===== STEP 4: Resources download =====
+        // ===== STEP 5: Resources download =====
         downloadResources();
         LogHelper.appendToLog(Level.INFO, "", true); // Adds an empty line to the log file, to make it more readable.
 
-        // ===== STEP 5: Overrides copy =====
+        // Does the third phase on servers, as they never have a GUI displayed with the optional mods.
+        if (side.equals("server")) thirdPhase();
+    }
+
+    public static void thirdPhase() {
+    // Third phrase of the mod, used after downloading the optional mods.
+
+        // ===== STEP 6: Overrides copy =====
         copyOverrides();
         LogHelper.appendToLog(Level.INFO, "", true); // Adds an empty line to the log file, to make it more readable.
 
-        // ===== STEP 6: Carryover copy =====
+        // ===== STEP 7: Carryover copy =====
         copyCarryover();
 
-        // ===== STEP 7: Final setup =====
+        // ===== STEP 8: Final setup =====
         finalSetup();
     }
 
@@ -112,9 +138,11 @@ public class Main {
 
         FileHelper.overwriteFile( Config.configFolder + "details.log", new String[0]); // Clears the log file, so it can be reused.
 
+        LogHelper.info("Current mod version is " + ModProperties.VERSION); // Displays the mod version
+
         LogHelper.verboseInfo("The mod correctly entered the preInit stage.");
-        makeFancyModInfo(event);
-        Config.createConfigFile();
+
+        makeFancyModInfo(event); // Creates the nice-looking mod info page.
 
         // Registers the GuiOpenEventHandler when on client side, and sets the variable to easily check which side is running.
         if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
@@ -122,7 +150,22 @@ public class Main {
             MinecraftForge.EVENT_BUS.register(GuiOpenEventHandler.instance);
         }
         else side = "server";
-        LogHelper.verboseInfo("The current side is " + side + " .");
+
+        LogHelper.verboseInfo("The current side is " + side + " ."); // Prints the current side.
+
+        Config.createConfigFile();
+
+        // Deletes the empty files in the mods folder
+        String[] list = FileHelper.listDirectory("mods", true);
+        for (String s : list) {
+            long size = -1;
+            try {
+                size = Files.size(Paths.get("mods" + File.separator + s));
+            }
+            catch (Exception ignore) {}
+
+            if (size == 0) FileHelper.delete("mods" + File.separator + s);
+        }
 
         // If the carryover folder doesn't exist, it creates it with empty mods and config folders inside.
         if (!FileHelper.exists("carryover")) {
@@ -193,12 +236,15 @@ public class Main {
                     "",
                     "# It is also possible to add a list of buttons to click in order using the follows property.",
                     "# It is just a list of texts to \"click\" on, separated by commas and ignoring any heading or ending spaces.",
-                    "# If for some reasons you need to click on a button that has a comma in its text, you can write \\, to escape it.",
+                    "# If for some reasons you need to click on a button that has a comma in its text, you can write \"\\,\" to escape it.",
                     "# The text to click on is accesed through the HTML page like this: <div href=\"[Your target URL]\"> [Your text] </div>",
                     "follows = [Your first button to click on], [The second button to click afterwards], [...]",
                     "",
                     "# It is possible to set any resource to only download when either on the client or server side. Both is the default in case of an incorrect or missing value.",
                     "side = both | client | server",
+                    "",
+                    "# It is also possible to mark a resource as optional, meaning that it won't be automatically downloaded this way.",
+                    "optional = true",
                     "",
                     "# The following are hashes, they're not mandatory, but setting at least one of them is recommended. Only the following formats are supported for now.",
                     "# Any file that doesn't match one of the given hashes will throw an error. Hashes are required if you want to use the mod's cache feature.",
@@ -231,6 +277,63 @@ public class Main {
                     "# Hashes can also be given here. If no hashes are given, the mod will grab them from the API's response if possible, in order to still allow for caching.",
                     "# Note that the mod will only use the API if at least the projectId and fileId properties are given, otherwise it will try to generate the URL."
             });
+
+            // The optionals.packconfig file.
+            FileHelper.overwriteFile(path + File.separator + "optionals.packconfig", new String[]{
+                    "# Example optionals.packconfig file",
+                    "# Comments start with an # and will affect the rest of the line.",
+                    "",
+                    "# Please check out the wiki for more information: https://github.com/HRudyPlayZ/MCInstanceLoader/wiki",
+                    "",
+                    "# The file is separated into multiple \"choice menus\", each created with a line starting with square brackets ([]).",
+                    "# Each of them is separate from the other and will be displayed one at a time.",
+                    "[Menu 1]    # The value inside here is the internal menu name, it may be used at some point, so make sure to give a unique name nonetheless.",
+                    "",
+                    "title = [Your title]    # This value defines the title of the menu, make it say something like \"Choose one of the following:\".",
+                    "",
+                    "# Those two properties define how many items you can select in the menu.",
+                    "# Everything selected by the user will be downloaded once they click the \"Confirm and continue\" button.",
+                    "# If the maximum amount of choices is above the minimum, there is no restriction on how many choices you can make.",
+                    "# If there is less selected items than the minimum, the \"Confirm and continue\" button will be grayed out.",
+                    "# If there is more than the maximum amount of items checked, the first one will automatically get unchecked.",
+                    "",
+                    "maxchoices = 1     # A number between 0 and X (any incorrect value will get ignored or adapted to the range), defaults to 1 if no value is set, 0 means there is no maximum to the amount you can check.",
+                    "minchoices = 0     # A number between 0 and X (any incorrect value will get ignored or adapted to the range). defaults to 0 if no value is set, which means the user is allowed to not check anything.",
+                    "",
+                    "# The optional resources system uses a list of \"option\" objects, this allows for grouping resources.",
+                    "# This list uses the format of optionX.property, X starting at 1.",
+                    "# It needs to be ordered, any option where the id (X) is separated by a hole will be ignored.",
+                    "# Below are how they're defined.",
+                    "",
+                    "option1.name = [Your option name]    # The name of the option, displayed next to the checkbox to the user.",
+                    "option1.description = [Your option's description]    # The description of the option, used to indicate more precisely to the user what this choice does.",
+                    "option1.default = true    # Whether the option should be checked by default or not, defaults to false if no value is set. Keep in mind that this still respects the value of maxchoices and might get unchecked if later options also get set to default and exceed the limit.",
+                    "",
+                    "# The list of resources to download by choosing this specific option, separated by commas.",
+                    "# Commas can be included inside a resource name if needed using \"\\,\".",
+                    "# Those names are defined inside the resources.packconfig file inside brackets.",
+                    "# NOTE: Only resources that were set to be optional would be downloaded.",
+                    "# Any undefined resources would be ignored.",
+                    "option1.resources = [Your first resource name], [Your second resource name], [...]",
+                    "",
+                    "option2.name = [Your second option name]",
+                    "option2.description = [Your second option's description]",
+                    "option2.default = true    # Setting this to true means that Option 1 will get unchecked as there is a maximum of one checked option for this menu.",
+                    "option2.resources = [Resource A], [Resource B], [...]",
+                    "",
+                    "# NOTE: You can put as much options as you want, note that they will get splitted into pages of 3 in order to be displayed in the GUI.",
+                    "# The page buttons and indicators only appear if there is more than one page. If there is more than 2, a first page and a last page button also appear.",
+                    "",
+                    "",
+                    "# Completely unrelated menu with its own settings.",
+                    "[Menu 2]",
+                    "title = [Your second title]",
+                    "",
+                    "option1.name = [Your first option name]",
+                    "option1.desription = [Your first option description]",
+                    "option1.default = true",
+                    "option1.resources = [Resource A], [...]"
+            });
         }
     }
 
@@ -245,8 +348,44 @@ public class Main {
     }
 
 
+    public static void updateChecker() {
+    // Checks if there is an update to the mod or not.
+
+        // If the update checker is disabled entirely, it doesn't do anything.
+        if (Config.updateCheckerMode == 3) return;
+
+        // Otherwise, it tries to download the version data. If it fails, it just throws an error in the logs.
+        if (!WebHelper.downloadFile("https://raw.githubusercontent.com/HRudyPlayZ/MCInstanceLoader/1.7.10/versionData.txt", Config.configFolder + "temp" +  File.separator + "versionData.txt")) {
+            LogHelper.error("Update checker: Failed to download the update data.");
+            return;
+        }
+
+        String[] list = FileHelper.listLines(Config.configFolder + "temp" +  File.separator + "versionData.txt");
+        String version = "";
+
+        for (String s : list) {
+            if (s.startsWith("version:")) version = s.substring(8).trim();
+            if (s.startsWith("url:")) updateUrl = s.substring(4).trim();
+            if (s.startsWith("fileName:")) updateFileName = s.substring(9).trim();
+        }
+
+        if (!ModProperties.VERSION.equalsIgnoreCase(version)) {
+            LogHelper.info("Update checker: There is a new version available. (" + version + ")");
+            LogHelper.info("You can get it manually at the following address: " + updateUrl);
+
+            if (Config.updateCheckerMode < 2) {
+                hasUpdate = true;
+                throwUpdateScreen();
+            }
+        }
+        else LogHelper.info("Update checker: The mod is properly updated.");
+    }
+
+
     public static void extractMCInstance() {
     // MCInstance extraction: Extracts the mcinstance file to the temp folder.
+
+        if (hasUpdate) return;
 
         if (FileHelper.exists(Config.configFolder + "pack.mcinstance")) {
             LogHelper.info("Found pack.instance, starting the installation process.");
@@ -262,7 +401,7 @@ public class Main {
     public static void downloadResources() {
     // Resources download: Downloads the resources added in the resources.packconfig file and saves them to their appropriate location in the temp/overrides folder.
 
-        if (!hasErrorOccured && FileHelper.exists(Config.configFolder + "temp" + File.separator + "resources.packconfig")) {
+        if (!hasErrorOccured && !hasUpdate && FileHelper.exists(Config.configFolder + "temp" + File.separator + "resources.packconfig")) {
             LogHelper.info("Found a resources.packconfig file, starting the download process.");
 
             ResourceObject[] list = PackConfigParser.parseResources(Config.configFolder + "temp" + File.separator + "resources.packconfig");
@@ -316,7 +455,7 @@ public class Main {
         String path = Config.configFolder + "temp" + File.separator + "overrides";
 
         // If there wasn't any error that occured on the previous steps.
-        if (!hasErrorOccured && FileHelper.exists(path) && FileHelper.isDirectory(path)) {
+        if (!hasErrorOccured && !hasUpdate && FileHelper.exists(path) && FileHelper.isDirectory(path)) {
             LogHelper.info("Moving the files from the overrides folder.");
 
             // Creates the recursive file list, to merge from.
@@ -348,7 +487,7 @@ public class Main {
         String path = "carryover";
 
         // If there wasn't any error that occured on the previous steps.
-        if (!hasErrorOccured && shouldDoSomething && FileHelper.exists(path) && FileHelper.isDirectory(path)) {
+        if (!hasErrorOccured && !hasUpdate && shouldDoSomething && FileHelper.exists(path) && FileHelper.isDirectory(path)) {
             LogHelper.info("Copying the files from the carryover folder.");
 
             // Creates the recursive file list, to merge from.
@@ -381,7 +520,10 @@ public class Main {
 
         // If there wasn't any error, it will throw the success screen and disable the mcinstance file, so the game will boot fine on the next launch.
         if (!hasErrorOccured && shouldDoSomething) {
-            for (int i = 0; i < Config.successMessage.length; i += 1) throwSuccess(Config.successMessage[i]);
+            if (side.equals("server")) throwSuccess("");
+            else {
+                for (int i = 0; i < Config.successMessage.length; i += 1) throwSuccess(Config.successMessage[i]);
+            }
 
             path = Config.configFolder + "pack.mcinstance";
             if (!Config.skipFileDisabling && FileHelper.exists(path)) { // If the config to skip the file disabling wasn't set, it will disable or remove it.
@@ -407,6 +549,8 @@ public class Main {
 
         LogHelper.error(text); // Adds the error to the general game log and the mod log.
 
+        if (side.equals("server")) return;
+
         text = "- " + text; // Formats the text to look like an error list.
 
         if (InfoGui.textList.size() <= 0) { // If this function gets called for the first time, it adds the error message and configures the GUI.
@@ -424,9 +568,13 @@ public class Main {
         }
     }
 
-
     public static void throwSuccess (String text) {
     // Sets the final results screen to be the success screen, and adds the success message in it.
+
+        if (side.equals("server")) {
+            LogHelper.info("Succesfully installed the mcinstance file!");
+            return;
+        }
 
         // If the function gets called for the first time, it adds the success message and configures the GUI.
         // Basically a useless check as the function only gets called once, but it might come useful in the future, we never know.
@@ -438,5 +586,20 @@ public class Main {
         }
 
         InfoGui.textList.add(text);
+    }
+
+
+    public static void throwUpdateScreen () {
+    // Sets the final results screen to be the mod update screen.
+
+        if (side.equals("server")) return;
+
+        if (Config.updateCheckerMode == 1) InfoGui.buttonAmount = 1;
+        else InfoGui.buttonAmount = 2;
+
+        InfoGui.textList.add(EnumChatFormatting.BOLD + "" + EnumChatFormatting.BLUE + "A new version has been found.");
+        InfoGui.textList.add("The update checker has found a new version of the mod.");
+        InfoGui.textList.add("Please install it and restart your game.");
+        InfoGui.textList.add("Clicking the button below will automatically install the update and close the game.");
     }
 }

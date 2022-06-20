@@ -1,12 +1,8 @@
 package com.hrudyplayz.mcinstanceloader.resources;
 
-import org.lwjgl.Sys;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
@@ -34,7 +30,7 @@ public class ResourceObject {
     public String versionId;
     public String fileId;
     public String sourceFileName;
-    public String optionalGroupName;
+    public boolean isOptional;
 
     public String destination = "";
     public String side = "both";
@@ -52,7 +48,8 @@ public class ResourceObject {
         LogHelper.appendToLog(Level.INFO, "DESTINATION:   " + this.destination, false);
         LogHelper.appendToLog(Level.INFO, "SIDE:   " + this.side, false);
         LogHelper.appendToLog(Level.INFO, "TYPE:   " + this.type, false);
-        LogHelper.appendToLog(Level.INFO, "GROUP NAME:   " + this.optionalGroupName, false);
+        LogHelper.appendToLog(Level.INFO, "OPTIONAL:   " + this.isOptional, false);
+
         if (!this.type.equals("curseforge") && !this.type.equals("modrinth")) LogHelper.appendToLog(Level.INFO, "URL:   " + this.url, false);
         else {
             LogHelper.appendToLog(Level.INFO, "PROJECTID:   " + this.projectId, false);
@@ -194,7 +191,7 @@ public class ResourceObject {
             }
             catch (Exception ignore) {}
 
-            if (WebHelper.downloadFile(this.url, this.destination)) return true;
+            return WebHelper.downloadFile(this.url, this.destination);
         }
 
         return false;
@@ -209,7 +206,10 @@ public class ResourceObject {
         String apiUrl = "https://addons-ecs.forgesvc.net/api/v2/addon/" + (this.projectId != null? this.projectId : "") + "/file/" + (this.fileId != null? this.fileId : "");
 
         if (WebHelper.downloadFile(apiUrl, Config.configFolder + "temp" + File.separator + "curseforgeData.json")) {
-            String file = FileHelper.listLines(Config.configFolder + "temp" + File.separator + "curseforgeData.json")[0];
+            String[] lines = FileHelper.listLines(Config.configFolder + "temp" + File.separator + "curseforgeData.json");
+            String file = "";
+            if (lines.length > 0) file = lines[0];
+
             String[] splitted;
 
             // Download URL
@@ -245,7 +245,7 @@ public class ResourceObject {
                 if (sha1.length() >= 1) this.SHA1 = sha1;
             }
 
-            if (this.url.length() > 0 && this.sourceFileName != null && this.SHA1 != null) return true;
+            return this.url.length() > 0 || this.sourceFileName != null;
         }
 
         return false;
@@ -258,13 +258,15 @@ public class ResourceObject {
 
         String apiUrl = "https://api.modrinth.com/v2/version/" + (this.versionId != null? this.versionId : "");
         if (WebHelper.downloadFile(apiUrl, Config.configFolder + "temp" + File.separator + "modrinthData.json")) {
-            String file = FileHelper.listLines(Config.configFolder + "temp" + File.separator + "modrinthData.json")[0];
+            String[] lines = FileHelper.listLines(Config.configFolder + "temp" + File.separator + "modrinthData.json");
+            String file = "";
+            if (lines.length > 0) file = lines[0];
 
             if (file.contains("\"files\":")) {
                 file = file.split("\"files\":\\[\\{")[1];
                 file = file.substring(0, file.indexOf("]"));
 
-                String[] files = file.split("\\},\\{");
+                String[] files = file.split("},\\{");
 
                 file = "";
                 for (String s : files) { // Grabs the file that matches the given file name.
@@ -310,7 +312,7 @@ public class ResourceObject {
                     if (sha512.length() >= 1) this.SHA512 = sha512;
                 }
 
-                if (this.url.length() > 0 && this.SHA1 != null && this.SHA512 != null) return true;
+                return this.url.length() > 0;
             }
         }
 
@@ -340,7 +342,7 @@ public class ResourceObject {
             if (this.type.equals("curseforge")) {
 
                 // If the file already has hashes defined and is already in cache, it won't do any request.
-                if (this.hasHash() && this.checkCache()) return true;
+                if (this.checkCache()) return true;
 
                 // If the mod can generate the download URL without doing any API call, it will do that instead.
                 if (projectId == null && genCurseforgeUrl()) return true;
@@ -351,7 +353,7 @@ public class ResourceObject {
                     if (genCurseforgeUrl()) return true; // If the mod was able to generate a download URL from those properties, it will use it.
                 }
                 else {
-                    Main.errorContext = "Error while getting the file data from Curseforge.";
+                    Main.errorContext = "Error while getting the data from Curseforge.";
                     return false;
                 }
 
@@ -363,13 +365,13 @@ public class ResourceObject {
             else if (this.type.equals("modrinth")) {
 
                 // If the file already has hashes defined and is already in cache, it won't do any request.
-                if (this.hasHash() && this.checkCache()) return true;
+                if (this.checkCache()) return true;
 
                 if (getModrinthData()) {
                     if (checkCache()) return true;
                 }
                 else {
-                    Main.errorContext = "Error while getting the file from Modrinth.";
+                    Main.errorContext = "Error while getting the data from Modrinth.";
                     return false;
                 }
 

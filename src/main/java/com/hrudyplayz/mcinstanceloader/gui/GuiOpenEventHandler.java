@@ -26,10 +26,14 @@ public class GuiOpenEventHandler {
     // Checks if the main menu gets shown.
 
         // If the event and the GUI are valid and the displayed GUI is part of the given class list (for mod support), it shows the results screen.
-        if (event != null && event.gui != null && Arrays.asList(Config.mainMenuClassPaths).contains(event.gui.getClass().toString().substring(6)) && Main.shouldDoSomething) {
+        if (event != null && event.gui != null && Arrays.asList(Config.mainMenuClassPaths).contains(event.gui.getClass().toString().substring(6))) {
+            if (!Main.hasUpdate && !Main.shouldDoSomething) return;
+
             LogHelper.info("Displaying GUI.");
 
-            event.gui = new InfoGui(event.gui);
+            if (Main.hasUpdate && Config.updateCheckerMode < 2) event.gui = new InfoGui(event.gui);
+            else if (Main.shouldDoSomething) event.gui = new OptionalModsGui(event.gui);
+
             MinecraftForge.EVENT_BUS.unregister(instance);
             return;
         }

@@ -11,6 +11,7 @@ public class Config {
 
     public static String configFolder = "config" + File.separator + ModProperties.MODID + File.separator;
 
+    public static int updateCheckerMode;
     public static boolean verboseMode;
     public static boolean skipFileDisabling;
     public static boolean deleteInsteadOfRenaming;
@@ -36,6 +37,8 @@ public class Config {
         Configuration config = new Configuration(path);
         config.load();
 
+        updateCheckerMode = config.getInt("Update checker: mode", CATEGORY_BEHAVIOR, 0, 0, 3, "Defines the mode to use for the update checker. 0 = GUI with a continue button, 1 = GUI that cannot be skipped, 2 = Logs only, 3 = No update checker.");
+        if (Main.side.equals("server") && updateCheckerMode < 2) updateCheckerMode = 2;
 
         verboseMode = config.getBoolean("Use verbose mode", CATEGORY_BEHAVIOR, false, "Enable this to make the mod log every action it does. Useful for debugging.");
         skipFileDisabling = config.getBoolean("Skip file disabling", CATEGORY_BEHAVIOR, false, "Whether to skip the step that disables the pack.mcinstance file and deletes the temp folder. Useful for pack devs.");

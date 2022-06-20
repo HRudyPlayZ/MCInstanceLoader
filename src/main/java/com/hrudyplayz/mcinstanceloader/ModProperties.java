@@ -12,9 +12,7 @@ public class ModProperties {
     public static final String NAME = "MCInstance Loader";
     public static final String VERSION = "2.0";
     public static final String MC_VERSION = "1.7.10";
-    public static final String URL = "";
-    public static final String VERSION_CHECKER_URL = "";
-
+    public static final String URL = "https://github.com/HRudyPlayZ/MCInstanceLoader/";
 
     // Mod info page
     public static final String COLORED_NAME = EnumChatFormatting.DARK_GREEN + "MC" + "Instance" + EnumChatFormatting.GRAY + " Loader";
@@ -22,8 +20,7 @@ public class ModProperties {
     public static final String COLORED_VERSION = EnumChatFormatting.GRAY + VERSION;
     public static final String COLORED_URL = EnumChatFormatting.GRAY + URL;
 
-    public static final String CREDITS = EnumChatFormatting.GOLD + "AstroTibs" + EnumChatFormatting.GRAY + " for OptionsEnforcer along with " +
-                                         EnumChatFormatting.BLUE + "Janrupf and HansWasser" + EnumChatFormatting.GRAY + " for ModDirector";
+    public static final String CREDITS = EnumChatFormatting.GOLD + "AstroTibs" + EnumChatFormatting.GRAY + " for OptionsEnforcer";
 
     public static final String[] AUTHORS = new String[] {
             EnumChatFormatting.RED + "HRudyPlayZ"
@@ -35,7 +32,6 @@ public class ModProperties {
     public static final String[] SPLASH_OF_THE_DAY = new String[] {
             "Darling, this is good!",
             "Why didn't i do this sooner?",
-            "What am i doing with my life?",
             "Finally, someone did this!",
             "Why do i smell something burning?",
             "Only made possible by Notch's most realistic LEGO Simulator built so far.",
@@ -45,16 +41,17 @@ public class ModProperties {
             "Mitochondria is the powerhouse of the cell.",
             "And it's not made in MCreator!",
             "Creeper? Awww man.",
-            "Also try ModDirector.",
+            "Also try ModDirector, although this is better. (Thanks to Janrupf and Hanswasser for inspiring this mod nonetheless).",
             "Also try OptionsEnforcer.",
             "Also try it's the little things.",
             "Also try CraftPresence.",
             "Also try ResourcceLoader",
-            "Finally released!",
+            "Finally updated!",
             "Check the documentation on Github.",
-            "1.0.0.0.0.0.0.0.0, also known as 1.0!",
-            "Since you're here, you might want to support the mod on Github and Curseforge!",
+            "2.0.0.0.0, also known as 2.0: The overhaul!",
+            "Since you're here, you might want to support the mod on Github and Modrinth!",
             "The most memes you can get, in one package.",
+            "Every modpack needs this!",
             "The revolution in modding history.",
             "Jeff Bezos's well kept secret.",
             "Why were the dwarves digging a hole? To get to this sooner!",

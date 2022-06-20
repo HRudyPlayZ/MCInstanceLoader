@@ -2,7 +2,6 @@ package com.hrudyplayz.mcinstanceloader.utils;
 
 import com.hrudyplayz.mcinstanceloader.Config;
 import com.hrudyplayz.mcinstanceloader.Main;
-import com.hrudyplayz.mcinstanceloader.resources.PackConfigParser;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
@@ -89,7 +88,7 @@ public class WebHelper {
 
             // Yeah i parse HTML with regex, what are you gonna do? Kill me? x)
             // Thanks to the Melody language for letting us generate regex using a readable syntax :P
-            String[] splitted = html.split(">{1}\\s*(?:" + Pattern.quote(follows[counter]) + "){1}\\s*<{1}");
+            String[] splitted = html.split(">\\s*" + Pattern.quote(follows[counter]) + "\\s*<");
             if (splitted.length == 1) {
                 Main.errorContext = "Unable to find the string \"" + follows[counter] + "\".";
                 return false;

@@ -14,7 +14,7 @@ import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.io.FileUtils;
 
-
+@SuppressWarnings("UnusedReturnValue")
 public class FileHelper {
 // This class aims to make file management less stupid than it is by default.
 
