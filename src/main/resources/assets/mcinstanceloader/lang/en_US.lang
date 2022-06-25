@@ -1,2 +1,13 @@
-# GUI
+# Info GUI
 gui.mcinstanceloader.openlogfile=Open the log file
+gui.mcinstanceloader.error=There was an issue processing the files.
+gui.mcinstanceloader.success=Succesfully processed the files!
+
+# Update GUI
+gui.mcinstanceloader.updatefound=A new version has been found.
+gui.mcinstanceloader.updatemessage=The update checker has found a new version of the mod.\nPlease install it and restart your game.\nClicking the button below will automatically install the update and close the game.
+gui.mcinstanceloader.installupdate=Install update
+gui.mcinstanceloader.continue=Continue anyways
+
+# Optional resources GUI
+gui.mcinstanceloader.confirm=Confirm and continue

@@ -10,6 +10,7 @@ import org.lwjgl.opengl.GL11;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
 
@@ -201,7 +202,7 @@ public class OptionalModsGui extends GuiScreen {
 		// Adds the "Confirm and continue" button, with the appropriate color.
 		String color = "";
 		if (!(checkedOptions.size() >= optionalList[currentMenu].minimumCheckedAmount)) color = "" + EnumChatFormatting.GRAY;
-		createButton(14, nextButtonX, buttonHeight, buttonWidth, color + "Confirm and continue");
+		createButton(14, nextButtonX, buttonHeight, buttonWidth, color + I18n.format("gui.mcinstanceloader.confirm"));
 	}
 
 	@Override

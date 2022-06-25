@@ -86,10 +86,10 @@ public class InfoGui extends GuiScreen {
 
             case 2:
                 text = I18n.format("menu.quit");
-                if (Main.hasUpdate) text = "Install update";
+                if (Main.hasUpdate) text = I18n.format("gui.mcinstanceloader.installupdate");
 
                 text2 = I18n.format("gui.mcinstanceloader.openlogfile");
-                if (Main.hasUpdate) text2 = "Continue anyways";
+                if (Main.hasUpdate) text2 = I18n.format("gui.mcinstanceloader.continue");
 
                 firstButton = createButton(0, this.width / 2 - (buttonWidth + 2), buttonYpos, buttonWidth, text);
                 secondButton = createButton(1, this.width / 2 + 2, buttonYpos, buttonWidth, text2);

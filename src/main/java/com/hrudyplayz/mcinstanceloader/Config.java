@@ -20,6 +20,9 @@ public class Config {
     public static boolean disableAutomaticZipCreation;
     public static int connectionTimeout;
 
+    public static String curseforgeURL;
+    public static String curseforgeAPIKey;
+
     public static String[] mainMenuClassPaths;
     public static int closeGameTimer;
     public static int amountOfDisplayedErrors;
@@ -47,6 +50,14 @@ public class Config {
         disableCache = config.getBoolean("Disable the cache system", CATEGORY_BEHAVIOR, false, "Whether to disable the cache system, forcing every resource to be downloaded regardless of the cached value.");
         disableAutomaticZipCreation = config.getBoolean("Disable the automatic zipping system for the pack folder", CATEGORY_BEHAVIOR, false, "Whether to disable the automatic creation of the pack.mcinstance file from the pack folder.");
         connectionTimeout = config.getInt("Web connection timeout", CATEGORY_BEHAVIOR, 100, 0, Integer.MAX_VALUE, "The amount of seconds the mod will wait to receive a response for downloads. Zero for no timeout at all (not recommended).");
+
+        curseforgeURL = config.getString("CFCore proxy URL", CATEGORY_BEHAVIOR, "http://api-pocket.com/", "The URL to use for the CFCore API. Any proxy works. Leave blank to use the official CFCore one. Defaults to a simple proxy.");
+        if (curseforgeURL.trim().length() == 0) curseforgeURL = "https://api.curseforge.com/";
+
+        curseforgeAPIKey = config.getString("CFCore API key", CATEGORY_BEHAVIOR, "", "The API key to use if you use the official Curseforge API.");
+
+        System.out.println(curseforgeURL);
+        System.out.println(curseforgeAPIKey);
 
         mainMenuClassPaths = config.getStringList("Menu class paths", CATEGORY_GUI, new String[]{"net.minecraft.client.gui.GuiMainMenu"}, "List of Java class paths for menus that will get interrupted by this mod's GUI. May be useful for mods that change the main menu.");
         closeGameTimer = config.getInt("Close game timer",CATEGORY_GUI, 10, 0, Integer.MAX_VALUE, "Delay before automatically closing the game on the success/fail screen. Set to 0 to disable.");

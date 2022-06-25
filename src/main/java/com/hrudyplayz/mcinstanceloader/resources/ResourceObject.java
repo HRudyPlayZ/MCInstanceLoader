@@ -203,7 +203,7 @@ public class ResourceObject {
     // This is still using the old API as thankfully it still works with Twitch's user agent as of now. Might have to switch to a proxy later on.
     // This project cannot rely on CFCore as there's both the needs to hide the API key and to download "opted-out" files and Overwolf doesn't propose any solution for those issues.
 
-        String apiUrl = "https://addons-ecs.forgesvc.net/api/v2/addon/" + (this.projectId != null? this.projectId : "") + "/file/" + (this.fileId != null? this.fileId : "");
+        String apiUrl = Config.curseforgeURL + "/v1/mods/" + (this.projectId != null? this.projectId : "") + "/files/" + (this.fileId != null? this.fileId : "");
 
         if (WebHelper.downloadFile(apiUrl, Config.configFolder + "temp" + File.separator + "curseforgeData.json")) {
             String[] lines = FileHelper.listLines(Config.configFolder + "temp" + File.separator + "curseforgeData.json");
@@ -235,14 +235,23 @@ public class ResourceObject {
             }
 
             // SHA1 hash
-            if (this.SHA1 == null && file.contains("\"hashes\":[{\"algorithm\":1,\"value\":\"")) {
-                splitted = file.split("\"hashes\":\\[\\{\"algorithm\":1,\"value\":\"");
+            if (this.SHA1 == null) {
+                splitted = file.split("\",\"algo\":1");
                 String sha1 = "";
                 if (splitted.length >= 2) {
-                    sha1 = splitted[1];
-                    sha1 = sha1.substring(0, sha1.indexOf("\""));
+                    sha1 = splitted[0].substring(splitted[0].lastIndexOf("\"") + 1);
                 }
                 if (sha1.length() >= 1) this.SHA1 = sha1;
+            }
+
+            // MD5 hash
+            if (this.MD5 == null) {
+                splitted = file.split("\",\"algo\":2");
+                String md5 = "";
+                if (splitted.length >= 2) {
+                    md5 = splitted[0].substring(splitted[0].lastIndexOf("\"") + 1);
+                }
+                if (md5.length() >= 1) this.MD5 = md5;
             }
 
             return this.url.length() > 0 || this.sourceFileName != null;

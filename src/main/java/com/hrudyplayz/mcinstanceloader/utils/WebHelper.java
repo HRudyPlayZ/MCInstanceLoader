@@ -46,6 +46,8 @@ public class WebHelper {
             HttpGet request = new HttpGet(new URL(fileURL).toURI()); // Creates the GET request.
             request.addHeader("Referer", REFERER); // Adds the referer to the request.
 
+            if (Config.curseforgeAPIKey.length() > 0) request.addHeader("x-api-key", Config.curseforgeAPIKey);
+
             HttpEntity entity = client.execute(request).getEntity();
             if (entity != null) FileUtils.copyInputStreamToFile(entity.getContent(), new File(savePath));
 

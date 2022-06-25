@@ -3,11 +3,13 @@ package com.hrudyplayz.mcinstanceloader;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
 
 import org.apache.logging.log4j.Level;
 
+import net.minecraft.client.resources.I18n;
 import net.minecraft.util.EnumChatFormatting;
 
 import net.minecraftforge.common.MinecraftForge;
@@ -554,7 +556,7 @@ public class Main {
         text = "- " + text; // Formats the text to look like an error list.
 
         if (InfoGui.textList.size() <= 0) { // If this function gets called for the first time, it adds the error message and configures the GUI.
-            InfoGui.textList.add(EnumChatFormatting.BOLD + "" + EnumChatFormatting.RED + "There was an issue processing the files.");
+            InfoGui.textList.add(EnumChatFormatting.BOLD + "" + EnumChatFormatting.RED + I18n.format("gui.mcinstanceloader.error"));
             InfoGui.buttonAmount = 2;
         }
 
@@ -579,7 +581,7 @@ public class Main {
         // If the function gets called for the first time, it adds the success message and configures the GUI.
         // Basically a useless check as the function only gets called once, but it might come useful in the future, we never know.
         if (InfoGui.textList.size() <= 0) {
-            InfoGui.textList.add(EnumChatFormatting.BOLD + "" + EnumChatFormatting.DARK_GREEN + "Succesfully processed the files!");
+            InfoGui.textList.add(EnumChatFormatting.BOLD + "" + EnumChatFormatting.DARK_GREEN + I18n.format("gui.mcinstanceloader.success"));
             InfoGui.buttonAmount = 1;
 
             LogHelper.info("Succesfully installed the mcinstance file!");
@@ -597,9 +599,8 @@ public class Main {
         if (Config.updateCheckerMode == 1) InfoGui.buttonAmount = 1;
         else InfoGui.buttonAmount = 2;
 
-        InfoGui.textList.add(EnumChatFormatting.BOLD + "" + EnumChatFormatting.BLUE + "A new version has been found.");
-        InfoGui.textList.add("The update checker has found a new version of the mod.");
-        InfoGui.textList.add("Please install it and restart your game.");
-        InfoGui.textList.add("Clicking the button below will automatically install the update and close the game.");
+        InfoGui.textList.add(EnumChatFormatting.BOLD + "" + EnumChatFormatting.BLUE + I18n.format("gui.mcinstanceloader.updatefound"));
+
+        InfoGui.textList.addAll(Arrays.asList(I18n.format("gui.mcinstanceloader.updatemessage").split("\\\\n")));
     }
 }
