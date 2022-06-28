@@ -200,8 +200,8 @@ public class ResourceObject {
 
     private boolean getCurseforgeData() {
     // Grabs some properties for Curseforge downloads.
-    // This is still using the old API as thankfully it still works with Twitch's user agent as of now. Might have to switch to a proxy later on.
-    // This project cannot rely on CFCore as there's both the needs to hide the API key and to download "opted-out" files and Overwolf doesn't propose any solution for those issues.
+    // This is using an unofficial API proxy to allow for any kind of files to work. Might have to switch again later on.
+    // This project cannot rely on the official CFCore by default as there's both the needs to hide the API key and to download "opted-out" files and Overwolf doesn't propose any solution for those issues.
 
         String apiUrl = Config.curseforgeURL + "/v1/mods/" + (this.projectId != null? this.projectId : "") + "/files/" + (this.fileId != null? this.fileId : "");
 
