@@ -19,6 +19,7 @@ package net.lingala.zip4j.headers;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.io.inputstream.NumberedSplitRandomAccessFile;
 import net.lingala.zip4j.model.AESExtraDataRecord;
+import net.lingala.zip4j.model.AbstractFileHeader;
 import net.lingala.zip4j.model.CentralDirectory;
 import net.lingala.zip4j.model.DataDescriptor;
 import net.lingala.zip4j.model.DigitalSignature;
@@ -193,7 +194,7 @@ public class HeaderReader {
         String fileName = decodeStringWithCharset(fileNameBuff, fileHeader.isFileNameUTF8Encoded(), charset);
         fileHeader.setFileName(fileName);
       } else {
-        fileHeader.setFileName(null);
+        throw new ZipException("Invalid entry name in file header");
       }
 
       fileHeader.setDirectory(isDirectory(fileHeader.getExternalFileAttributes(), fileHeader.getFileName()));
@@ -558,7 +559,7 @@ public class HeaderReader {
       localFileHeader.setFileName(fileName);
       localFileHeader.setDirectory(fileName.endsWith("/") || fileName.endsWith("\\"));
     } else {
-      localFileHeader.setFileName(null);
+      throw new ZipException("Invalid entry name in local file header");
     }
 
     readExtraDataRecords(inputStream, localFileHeader);
@@ -612,7 +613,7 @@ public class HeaderReader {
     return dataDescriptor;
   }
 
-  private void readAesExtraDataRecord(FileHeader fileHeader, RawIO rawIO) throws ZipException {
+  private void readAesExtraDataRecord(AbstractFileHeader fileHeader, RawIO rawIO) throws ZipException {
     if (fileHeader.getExtraDataRecords() == null || fileHeader.getExtraDataRecords().size() <= 0) {
       return;
     }
@@ -621,18 +622,6 @@ public class HeaderReader {
     if (aesExtraDataRecord != null) {
       fileHeader.setAesExtraDataRecord(aesExtraDataRecord);
       fileHeader.setEncryptionMethod(EncryptionMethod.AES);
-    }
-  }
-
-  private void readAesExtraDataRecord(LocalFileHeader localFileHeader, RawIO rawIO) throws ZipException {
-    if (localFileHeader.getExtraDataRecords() == null || localFileHeader.getExtraDataRecords().size() <= 0) {
-      return;
-    }
-
-    AESExtraDataRecord aesExtraDataRecord = readAesExtraDataRecord(localFileHeader.getExtraDataRecords(), rawIO);
-    if (aesExtraDataRecord != null) {
-      localFileHeader.setAesExtraDataRecord(aesExtraDataRecord);
-      localFileHeader.setEncryptionMethod(EncryptionMethod.AES);
     }
   }
 
@@ -650,7 +639,8 @@ public class HeaderReader {
 
       if (extraDataRecord.getHeader() == HeaderSignature.AES_EXTRA_DATA_RECORD.getValue()) {
 
-        if (extraDataRecord.getData() == null) {
+        byte[] aesExtraDataRecordBytes = extraDataRecord.getData();
+        if (aesExtraDataRecordBytes == null || aesExtraDataRecordBytes.length != 7) {
           throw new ZipException("corrupt AES extra data records");
         }
 

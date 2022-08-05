@@ -82,7 +82,7 @@ public class Main {
         // ===== STEP 4: Zip the pack folder =====
         if (!Config.disableAutomaticZipCreation && !FileHelper.exists(Config.configFolder + "pack.mcinstance") && !FileHelper.exists(Config.configFolder + "pack.mcinstance.disabled")) {
             LogHelper.info("No pack.instance file found, created one from the pack folder.");
-            ZipHelper.zip(Config.configFolder + "pack", Config.configFolder + "pack.mcinstance");
+            ZipHelper.zip(Config.configFolder + "pack", Config.configFolder + "pack.mcinstance", false, true);
         }
 
         // ===== STEP 5: Resources download =====
@@ -432,11 +432,11 @@ public class Main {
                 if (object.downloadFile()) {
                     if (!object.checkHash()) throwError("Could not verify the hash of " + object.name + ".");
                     else if (!object.checkCache() && !Config.disableCache) {
-                        if (object.SHA512 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "SHA512-" + object.SHA512, true);
-                        else if (object.SHA256 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "SHA256-" + object.SHA256, true);
-                        else if (object.SHA1 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "SHA1-" + object.SHA1, true);
-                        else if (object.MD5 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "MD5-" + object.MD5, true);
-                        else if (object.CRC32 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "CRC32-" + object.CRC32, true);
+                        if (object.SHA512 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "SHA512-" + object.SHA512);
+                        else if (object.SHA256 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "SHA256-" + object.SHA256);
+                        else if (object.SHA1 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "SHA1-" + object.SHA1);
+                        else if (object.MD5 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "MD5-" + object.MD5);
+                        else if (object.CRC32 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "CRC32-" + object.CRC32);
                     }
                 }
                 else throwError("Error while downloading " + object.name + ".");
@@ -473,7 +473,7 @@ public class Main {
                 LogHelper.verboseInfo("Merging " + s + " with the original folder.");
 
                 // Tries to move (merge) the file, if it fails it throws an error.
-                if (!FileHelper.copy(Config.configFolder + "temp" + File.separator + "overrides" + File.separator + s, s, false)) throwError("Error while merging the file " + s + " from the overrides folder.");
+                if (!FileHelper.copy(Config.configFolder + "temp" + File.separator + "overrides" + File.separator + s, s)) throwError("Error while merging the file " + s + " from the overrides folder.");
 
                 errorContext = ""; // Resets the errorContext, so it can be reused for the next resource or the next step.
             }
@@ -505,7 +505,7 @@ public class Main {
                 LogHelper.verboseInfo("Merging " + s + " from carryover to the root folder.");
 
                 // Tries to copy (merge) the file, if it fails it throws an error.
-                if (!FileHelper.copy("carryover" + File.separator + s, s, false)) throwError("Error while merging the file " + s + " from the carryover folder.");
+                if (!FileHelper.copy("carryover" + File.separator + s, s)) throwError("Error while merging the file " + s + " from the carryover folder.");
 
                 errorContext = ""; // Resets the errorContext, so it can be reused for the next resource or the next step.
             }
@@ -530,7 +530,7 @@ public class Main {
             path = Config.configFolder + "pack.mcinstance";
             if (!Config.skipFileDisabling && FileHelper.exists(path)) { // If the config to skip the file disabling wasn't set, it will disable or remove it.
                 if (Config.deleteInsteadOfRenaming) FileHelper.delete(path);
-                else FileHelper.move(path, path + ".disabled", true);
+                else FileHelper.move(path, path + ".disabled");
             }
         }
 
@@ -540,7 +540,7 @@ public class Main {
     }
 
 
-    public static void throwError (String text) {
+    public static void throwError(String text) {
     // Sets the final results screen to be an error screen. Adds an error any time it gets called.
     // If the amount of errors displayed is above the maximum limit, it adds to the more counter instead.
 
@@ -570,7 +570,7 @@ public class Main {
         }
     }
 
-    public static void throwSuccess (String text) {
+    public static void throwSuccess(String text) {
     // Sets the final results screen to be the success screen, and adds the success message in it.
 
         if (side.equals("server")) {
@@ -591,7 +591,7 @@ public class Main {
     }
 
 
-    public static void throwUpdateScreen () {
+    public static void throwUpdateScreen() {
     // Sets the final results screen to be the mod update screen.
 
         if (side.equals("server")) return;

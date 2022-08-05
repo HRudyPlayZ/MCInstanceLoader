@@ -14,6 +14,7 @@ import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
 import net.lingala.zip4j.util.InternalZipConstants;
 import net.lingala.zip4j.util.RawIO;
+import net.lingala.zip4j.util.Zip4jUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -23,6 +24,7 @@ import java.util.zip.CRC32;
 import static net.lingala.zip4j.util.FileUtils.isZipEntryDirectory;
 import static net.lingala.zip4j.util.InternalZipConstants.BUFF_SIZE;
 import static net.lingala.zip4j.util.InternalZipConstants.MIN_BUFF_SIZE;
+import static net.lingala.zip4j.util.InternalZipConstants.USE_UTF8_FOR_PASSWORD_ENCODING_DECODING;
 
 public class ZipOutputStream extends OutputStream {
 
@@ -54,7 +56,10 @@ public class ZipOutputStream extends OutputStream {
   }
 
   public ZipOutputStream(OutputStream outputStream, char[] password, Charset charset) throws IOException {
-    this(outputStream, password, new Zip4jConfig(charset, BUFF_SIZE), new ZipModel());
+    this(outputStream,
+            password,
+            new Zip4jConfig(charset, BUFF_SIZE, USE_UTF8_FOR_PASSWORD_ENCODING_DECODING),
+            new ZipModel());
   }
 
   public ZipOutputStream(OutputStream outputStream, char[] password, Zip4jConfig zip4jConfig,
@@ -79,6 +84,11 @@ public class ZipOutputStream extends OutputStream {
       clonedZipParameters.setWriteExtendedLocalFileHeader(false);
       clonedZipParameters.setCompressionMethod(CompressionMethod.STORE);
       clonedZipParameters.setEncryptFiles(false);
+      clonedZipParameters.setEntrySize(0);
+
+      if (zipParameters.getLastModifiedFileTime() <= 0) {
+        clonedZipParameters.setLastModifiedFileTime(System.currentTimeMillis());
+      }
     }
     initializeAndWriteFileHeader(clonedZipParameters);
 
@@ -206,9 +216,9 @@ public class ZipOutputStream extends OutputStream {
     }
 
     if (zipParameters.getEncryptionMethod() == EncryptionMethod.AES) {
-      return new AesCipherOutputStream(zipEntryOutputStream, zipParameters, password);
+      return new AesCipherOutputStream(zipEntryOutputStream, zipParameters, password, zip4jConfig.isUseUtf8CharsetForPasswords());
     } else if (zipParameters.getEncryptionMethod() == EncryptionMethod.ZIP_STANDARD) {
-      return new ZipStandardCipherOutputStream(zipEntryOutputStream, zipParameters, password);
+      return new ZipStandardCipherOutputStream(zipEntryOutputStream, zipParameters, password, zip4jConfig.isUseUtf8CharsetForPasswords());
     } else if (zipParameters.getEncryptionMethod() == EncryptionMethod.ZIP_STANDARD_VARIANT_STRONG) {
       throw new ZipException(EncryptionMethod.ZIP_STANDARD_VARIANT_STRONG + " encryption method is not supported");
     } else {
@@ -226,6 +236,10 @@ public class ZipOutputStream extends OutputStream {
   }
 
   private void verifyZipParameters(ZipParameters zipParameters) {
+    if (Zip4jUtil.isStringNullOrEmpty(zipParameters.getFileNameInZip())) {
+      throw new IllegalArgumentException("fileNameInZip is null or empty");
+    }
+
     if (zipParameters.getCompressionMethod() == CompressionMethod.STORE
         && zipParameters.getEntrySize() < 0
         && !isZipEntryDirectory(zipParameters.getFileNameInZip())

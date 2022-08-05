@@ -1,8 +1,10 @@
 package com.hrudyplayz.mcinstanceloader.resources;
 
+import net.minecraft.client.Minecraft;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
@@ -34,6 +36,8 @@ public class ResourceObject {
 
     public String destination = "";
     public String side = "both";
+
+    private boolean hasTriedHashChecks;
 
     public String SHA512;
     public String SHA256;
@@ -80,8 +84,22 @@ public class ResourceObject {
             }
 
             catch (IOException e) {
-                Main.errorContext = "Error while checking the SHA-512 hash.";
-                return false;
+                if (!this.hasTriedHashChecks) {
+                    this.hasTriedHashChecks = true;
+                    LogHelper.info("An error occured while checking the SHA-512 hash, trying again...");
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(1000);
+                    }
+                    catch (InterruptedException ignore) {}
+
+                    return this.checkHash();
+                }
+                else {
+                    e.printStackTrace();
+                    Main.errorContext = "System error while checking the SHA-512 hash.";
+
+                    return false;
+                }
             }
         }
 
@@ -96,8 +114,22 @@ public class ResourceObject {
             }
 
             catch (IOException e) {
-                Main.errorContext = "Error while checking the SHA-256 hash.";
-                return false;
+                if (!this.hasTriedHashChecks) {
+                    this.hasTriedHashChecks = true;
+                    LogHelper.info("An error occured while checking the SHA-256 hash, trying again...");
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(1000);
+                    }
+                    catch (InterruptedException ignore) {}
+
+                    return this.checkHash();
+                }
+                else {
+                    e.printStackTrace();
+                    Main.errorContext = "System error while checking the SHA-256 hash.";
+
+                    return false;
+                }
             }
         }
 
@@ -112,8 +144,22 @@ public class ResourceObject {
             }
 
             catch (IOException e) {
-                Main.errorContext = "Error while checking the SHA1 hash.";
-                return false;
+                if (!this.hasTriedHashChecks) {
+                    this.hasTriedHashChecks = true;
+                    LogHelper.info("An error occured while checking the SHA1 hash, trying again...");
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(1000);
+                    }
+                    catch (InterruptedException ignore) {}
+
+                    return this.checkHash();
+                }
+                else {
+                    e.printStackTrace();
+                    Main.errorContext = "System error while checking the SHA1 hash.";
+
+                    return false;
+                }
             }
         }
 
@@ -128,8 +174,22 @@ public class ResourceObject {
             }
 
             catch (IOException e) {
-                Main.errorContext = "Error while checking the MD5 hash.";
-                return false;
+                if (!this.hasTriedHashChecks) {
+                    this.hasTriedHashChecks = true;
+                    LogHelper.info("An error occured while checking the MD5 hash, trying again...");
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(1000);
+                    }
+                    catch (InterruptedException ignore) {}
+
+                    return this.checkHash();
+                }
+                else {
+                    e.printStackTrace();
+                    Main.errorContext = "System error while checking the MD5 hash.";
+
+                    return false;
+                }
             }
         }
 
@@ -147,8 +207,22 @@ public class ResourceObject {
             }
 
             catch (IOException e) {
-                Main.errorContext = "Error while checking the CRC32 hash.";
-                return false;
+                if (!this.hasTriedHashChecks) {
+                    this.hasTriedHashChecks = true;
+                    LogHelper.info("An error occured while checking the CRC32 hash, trying again...");
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(1000);
+                    }
+                    catch (InterruptedException ignore) {}
+
+                    return this.checkHash();
+                }
+                else {
+                    e.printStackTrace();
+                    Main.errorContext = "System error while checking the CRC32 hash.";
+
+                    return false;
+                }
             }
         }
 
@@ -170,11 +244,11 @@ public class ResourceObject {
 
         String[] files = FileHelper.listDirectory("mcinstance-cache", false);
         for (String s : files) {
-            if (this.SHA512 != null && s.equalsIgnoreCase("SHA512-" + this.SHA512)) return FileHelper.copy("mcinstance-cache" + File.separator + s, this.destination, true);
-            if (this.SHA256 != null && s.equalsIgnoreCase("SHA256-" + this.SHA256)) return FileHelper.copy("mcinstance-cache" + File.separator + s, this.destination, true);
-            if (this.SHA1 != null && s.equalsIgnoreCase("SHA1-" + this.SHA1)) return FileHelper.copy("mcinstance-cache" + File.separator + s, this.destination, true);
-            if (this.MD5 != null && s.equalsIgnoreCase("MD5-" + this.MD5)) return FileHelper.copy("mcinstance-cache" + File.separator + s, this.destination, true);
-            if (this.CRC32 != null && s.equalsIgnoreCase("CRC32-" + this.CRC32)) return FileHelper.copy("mcinstance-cache" + File.separator + s, this.destination, true);
+            if (this.SHA512 != null && s.equalsIgnoreCase("SHA512-" + this.SHA512)) return FileHelper.copy("mcinstance-cache" + File.separator + s, this.destination);
+            if (this.SHA256 != null && s.equalsIgnoreCase("SHA256-" + this.SHA256)) return FileHelper.copy("mcinstance-cache" + File.separator + s, this.destination);
+            if (this.SHA1 != null && s.equalsIgnoreCase("SHA1-" + this.SHA1)) return FileHelper.copy("mcinstance-cache" + File.separator + s, this.destination);
+            if (this.MD5 != null && s.equalsIgnoreCase("MD5-" + this.MD5)) return FileHelper.copy("mcinstance-cache" + File.separator + s, this.destination);
+            if (this.CRC32 != null && s.equalsIgnoreCase("CRC32-" + this.CRC32)) return FileHelper.copy("mcinstance-cache" + File.separator + s, this.destination);
         }
 
         return false;

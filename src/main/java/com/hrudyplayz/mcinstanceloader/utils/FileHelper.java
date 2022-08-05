@@ -9,20 +9,29 @@ import java.nio.file.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.io.FileUtils;
 
+
+/**
+An helper class to do various file operations more easily.
+
+@author HRudyPlayZ
+*/
 @SuppressWarnings("UnusedReturnValue")
 public class FileHelper {
-// This class aims to make file management less stupid than it is by default.
 
+    /**
+    Checks whether a given path is possible and valid regardless of the OS.
+    Used to validate a string path. Used by every method of the {@link FileHelper} class to skip IOExceptions.
 
-    private static boolean isInvalidPath (String path) {
-    // Makes sure a given path is possible, regardless of the OS.
-    // Every other method will use it to have valid paths (just to make sure it gets handled properly, in case the system doesn't return an IOException for those).
-
+    @param path The string to validate.
+    @return Whether the path is valid or not.
+    */
+    private static boolean isInvalidPath(String path) {
         String[] Forbidden = new String[] {"..", "<", ">", ":", "\"", "|", "?", "*"}; // Any path containing those characters will be denied.
         String[] ForbiddenNames = new String[]{"CON", "COM", "PRN", "AUX", "CLOCK$", "NUL", "COM1", "COM2", "COM3",
                 "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3",
@@ -49,36 +58,56 @@ public class FileHelper {
     }
 
 
-    public static boolean createDirectory (String path) {
-    // Creates a new directory in the specified path (as a string).
-    // If the directory already exists, it doesn't do anything (just suceeds).
-    // If one of the parent directories doesn't exist, it creates them recursively.
+    /**
+    Creates a new directory at the specified path.
+    If the directory already exists, it doesn't do anything and succeeds.
+    If one of the parent directories doesn't exist, it creates them recursively.
 
+    @param path The path where to create the directory (Must contain its name at the end).
+    @return Whether the operation succeeded or not.
+    */
+    public static boolean createDirectory(String path) {
+        return createDirectory(path, false);
+    }
+
+    private static boolean createDirectory(String path, boolean doneIOException) {
         try {
-
-            if (FileHelper.isInvalidPath(path)) return false; // Checks if the given path isn't valid.
+            if (isInvalidPath(path)) return false; // Checks if the given path isn't valid.
 
             Path realPath = Paths.get(path);
             Files.createDirectories(realPath);
 
             return true;
         }
-
         catch (IOException e) {
-            return false;
-        }
+            if (!doneIOException) {
+                LogHelper.info("An error occured while creating the directory, trying again...");
+                try {
+                    TimeUnit.MILLISECONDS.sleep(1000);
+                }
+                catch (InterruptedException ignore) {}
 
+                return createDirectory(path, true);
+            }
+            else return false;
+        }
     }
 
+    /**
+    Creates a new empty file at the specified location (must contain the file name and extension, as a {@link String}).
+    If the file already exists, it overwrites the previous one.
+    If one of the parent directories doesn't exist or if the given path is actually a folder, it fails.
 
-    public static boolean createFile (String path) {
-    // Creates a new empty file at the given path (must contain its name, as a string).
-    // If the file already exists, it deletes the previous one.
-    // If one of the parent directories doesn't exist or if the given path is actually a folder, it fails.
+    @param path The path where to create the file (must contain its name and possibly extension at the end).
+    @return Whether the operation succeeded or not.
+    */
+    public static boolean createFile(String path) {
+        return createFile(path, false);
+    }
 
+    private static boolean createFile(String path, boolean doneIOException) {
         try {
-
-            if (FileHelper.isInvalidPath(path)) return false; // Checks if the given path isn't valid.
+            if (isInvalidPath(path)) return false; // Checks if the given path isn't valid.
 
             Path realPath = Paths.get(path);
             Files.deleteIfExists(realPath);
@@ -88,62 +117,110 @@ public class FileHelper {
         }
 
         catch (IOException e) {
-            return false;
-        }
+            if (!doneIOException) {
+                LogHelper.info("An error occured while creating the file, trying again...");
+                try {
+                    TimeUnit.MILLISECONDS.sleep(1000);
+                }
+                catch (InterruptedException ignore) {}
 
+                return createFile(path, true);
+            }
+            else return false;
+        }
     }
 
+    /**
+    Appends a specific list of line strings to the end of a given file.
+    In other words, this adds a list of lines, each represented by a {@link String} at the end of a file.
+    If the file doesn't exist, it creates it.
 
-    public static boolean appendFile (String path, String[] lines) {
-    // Adds a list of lines to the end of a specific file.
-    // If the file doesn't exist, it creates it.
+    @param path The path of the file to modify.
+    @param lines The list of lines to add to the end of the file.
+    @return Whether the operation succeeded or not.
+    */
+    public static boolean appendFile(String path, String[] lines) {
+        return appendFile(path, lines, false);
+    }
 
+    private static boolean appendFile(String path, String[] lines, boolean doneIOException) {
         try {
-
-            if (FileHelper.isInvalidPath(path)) return false; // Checks if the given path isn't valid.
+            if (isInvalidPath(path)) return false; // Checks if the given path isn't valid.
 
             Path realPath = Paths.get(path);
-            if (!Files.exists(realPath)) FileHelper.createFile(path);
+            if (!Files.exists(realPath)) createFile(path);
             Files.write(realPath, Arrays.asList(lines), StandardCharsets.UTF_8, StandardOpenOption.APPEND);
 
             return true;
         }
 
         catch (IOException e) {
-            return false;
-        }
+            if (!doneIOException) {
+                LogHelper.info("An error occured while changing the file, trying again...");
+                try {
+                    TimeUnit.MILLISECONDS.sleep(1000);
+                }
+                catch (InterruptedException ignore) {}
 
+                return appendFile(path, lines, true);
+            }
+            else return false;
+        }
     }
 
+    /**
+    Replaces a specific file's content with a given list of lines (as {@link String}s).
+    If the file doesn't exist, it creates it.
 
-    public static boolean overwriteFile (String path, String[] lines) {
-    // Replaces a specific file's content with a precise list of lines.
-    // If the file doesn't exist, it creates it.
+    @param path The path of the file to modify.
+    @param lines The list of lines that are present in the file.
+    @return Whether the operation succeeded or not.
+    */
+    public static boolean overwriteFile(String path, String[] lines) {
+        return overwriteFile(path, lines, false);
+    }
 
+    private static boolean overwriteFile(String path, String[] lines, boolean doneIOException) {
         try {
-
-            if (FileHelper.isInvalidPath(path)) return false; // Checks if the given path isn't valid.
+            if (isInvalidPath(path)) return false; // Checks if the given path isn't valid.
 
             Path realPath = Paths.get(path);
-            FileHelper.createFile(path);
+            createFile(path);
             Files.write(realPath, Arrays.asList(lines), StandardCharsets.UTF_8);
 
             return true;
         }
 
         catch (IOException e) {
-            return false;
-        }
+            if (!doneIOException) {
+                LogHelper.info("An error occured while overwriting the file, trying again...");
+                try {
+                    TimeUnit.MILLISECONDS.sleep(1000);
+                }
+                catch (InterruptedException ignore) {}
 
+                return overwriteFile(path, lines, true);
+            }
+            else return false;
+        }
     }
 
 
-    public static String[] listLines (String path) {
-    // Returns a list of each line in a specific file.
+    /**
+    Returns a list of lines as {@link String}s present inside a specific file.
+    It separates the file using the UTF-8 charset. And considers {@value \n} as the delimiter.
+    It returns an empty list if an {@link IOException} occurs.
 
+    @param path The path of the file to read
+    @return The list of lines present in the file.
+    */
+    public static String[] listLines(String path) {
+       return listLines(path, false);
+    }
+
+    private static String[] listLines(String path, boolean doneIOException) {
         try {
-
-            if (FileHelper.isInvalidPath(path)) return new String[0]; // Checks if the given path isn't valid.
+            if (isInvalidPath(path)) return new String[0]; // Checks if the given path isn't valid.
 
             Path realPath = Paths.get(path);
             List<String> list = Files.readAllLines(realPath);
@@ -152,16 +229,31 @@ public class FileHelper {
         }
 
         catch (IOException e) {
-            return new String[0];
+            if (!doneIOException) {
+                LogHelper.info("An error occured while reading the file, trying again...");
+                try {
+                    TimeUnit.MILLISECONDS.sleep(1000);
+                }
+                catch (InterruptedException ignore) {}
+
+                return listLines(path, true);
+            }
+            else return new String[0];
         }
     }
 
 
-    public static String[] listDirectory(String path, boolean isRecursive) {
-    // Returns the list of files and folders in a specific directory.
-    // It can be recursive or not.
+    /**
+    Returns the list of files and folders inside a specific directory.
+    It can be set to either include the files inside the directories recursively or not.
+    It returns an empty list if the file doesn't exist or isn't a directory.
 
-        if (FileHelper.isInvalidPath(path)) return new String[0]; // Checks if the given path isn't valid.
+    @param path The path of the directory to read
+    @param isRecursive Whether the list should include the content of subfolders recursively.
+    @return The list of files and directories present in the specific path
+    */
+    public static String[] listDirectory(String path, boolean isRecursive) {
+        if (isInvalidPath(path)) return new String[0]; // Checks if the given path isn't valid.
 
         String[] result;
         File file = new File(path);
@@ -172,7 +264,6 @@ public class FileHelper {
 
             int cursor = 0;
             for (File i : list) {
-
                 if (!i.getPath().equals(path)) {
                     result[cursor] = i.getPath();
                     result[cursor] = result[cursor].replace(path, "");
@@ -181,39 +272,41 @@ public class FileHelper {
                     if (i.isDirectory()) result[cursor] += File.separator;
                     cursor += 1;
                 }
-
-
-
             }
         }
-
         else if (file.exists() && file.isDirectory()) result = file.list();
-        else {
-            result = new String[0];
-        }
+        else result = new String[0];
 
         return result;
     }
-    
 
-    public static boolean copy (String source, String target, boolean replaceTarget) {
-    // Copies either a folder or a file to a specific location.
-    // Files need to have the target file name (with its extension) specified.
 
+    /**
+    Copies an entire folder or a file to a specific location.
+    If the target path already exists, it deletes it.
+    Files need to have the target file name (and extension) specified too.
+
+    @param source The path of the content to copy
+    @param target The path where to save the copied content
+    @return Whether the operation succeeded or not.
+    */
+    public static boolean copy(String source, String target) {
+        return copy(source, target, false);
+    }
+
+    private static boolean copy(String source, String target, boolean doneIOException) {
         try {
-
             Path sourcePath = Paths.get(source);
 
-            if (FileHelper.isInvalidPath(source)) return false; // Checks if the source path isn't valid.
-            if (FileHelper.isInvalidPath(target)) return false; // Checks if the target path isn't valid.
-
+            if (isInvalidPath(source)) return false; // Checks if the source path isn't valid.
+            if (isInvalidPath(target)) return false; // Checks if the target path isn't valid.
 
             if (target.contains(File.separator)) {
                 String path = target.substring(0, target.lastIndexOf(File.separator));
-                if (!FileHelper.exists(path)) FileHelper.createDirectory(path);
+                if (!exists(path)) createDirectory(path);
             }
 
-            if (replaceTarget && FileHelper.exists(target)) FileHelper.delete(target);
+            if (exists(target)) delete(target);
 
             if (Files.isDirectory(sourcePath)) FileUtils.copyDirectory(new File(source), new File(target));
             else Files.copy(sourcePath, Paths.get(target), StandardCopyOption.REPLACE_EXISTING);
@@ -222,27 +315,50 @@ public class FileHelper {
         }
 
         catch (IOException e) {
-            LogHelper.info("You had an IOException while calling the copy method.");
-            e.printStackTrace();
-            return false;
+            if (!doneIOException) {
+                LogHelper.info("An error occured while copying the file, trying again...");
+                try {
+                    TimeUnit.MILLISECONDS.sleep(1000);
+                }
+                catch (InterruptedException ignore) {}
+
+                return copy(source, target, true);
+            }
+            else return false;
         }
     }
 
 
-    public static boolean move (String source, String target, boolean replaceTarget) {
-    // Move either a folder or a file to a specific location.
-    // Files need to have the target file name (with its extension) specified.
-        boolean result = FileHelper.copy(source, target, replaceTarget);
-        if (result) FileHelper.delete(source);
+    /**
+    Moves (copies and deletes) an entire folder or a file to a specific location.
+    If the the target files already exists, it deletes it.
+    It will only delete the original file if the copy operation is successful.
+    Files need to have the target file name (and extension) specified too.
+
+    @param source The path of the content to copy and delete when successful.
+    @param target The path where to save the copied content.
+    @return Whether the operation succeeded or not.
+    */
+    public static boolean move(String source, String target) {
+        boolean result = copy(source, target);
+        if (result) result = delete(source);
 
         return result;
     }
 
 
-    public static boolean delete (String path) {
-    // Deletes a specific file/folder from the disk.
-    // This method should not validate the path, just in case something managed to go through it and you need to delete something.
+    /**
+    Deletes an entire folder (recursively) or file from the disk.
+    This method doesn't validate the file path in case something manages to get through and needs to be deleted.
 
+    @param path The path of the content to delete.
+    @return Whether the operation succeeded or not.
+    */
+    public static boolean delete(String path) {
+        return delete(path, false);
+    }
+
+    private static boolean delete(String path, boolean doneIOException) {
         try {
             Path realPath = Paths.get(path);
 
@@ -253,29 +369,43 @@ public class FileHelper {
 
             return true;
         }
+
         catch (IOException e) {
-            return false;
+            if (!doneIOException) {
+                LogHelper.info("An error occured while deleting the file, trying again...");
+                try {
+                    TimeUnit.MILLISECONDS.sleep(1000);
+                }
+                catch (InterruptedException ignore) {}
+
+                return delete(path, true);
+            }
+            else return false;
         }
-
     }
 
 
+    /**
+    Checks if a file or folder exists.
+    Basically acts as a lazy interface for {@link Files#exists(Path, LinkOption...)}.
+
+    @param path The path to check
+    @return Whether the path exists or not.
+    */
     public static boolean exists(String path) {
-    // Returns a boolean indicating if a file/folder exists or not.
-    // Basically just acts as a lazy interface for the Files.exists method.
-    // I could have also used the File class, but both work fine.
-
-        Path realPath = Paths.get(path);
-        return Files.exists(realPath);
+        return Files.exists(Paths.get(path));
     }
 
 
-    public static boolean isDirectory(String path) {
-    // Returns a boolean indicating if a path corresponds to a folder or not.
-    // Basically just acts as a lazy interface for the Files.isDirectory method.
-    // I could have also used the File class, but both work fine.
+    /**
+    Checks whether the given path corresponds to a folder or a file.
+    Returns true if the path is a folder and false otherwise.
+    Basically acts as a lazy interface for {@link Files#isDirectory(Path, LinkOption...)}.
 
-        Path realPath = Paths.get(path);
-        return Files.isDirectory(realPath);
+    @param path The path to check
+    @return Whether the path is a directory or not.
+    */
+    public static boolean isDirectory(String path) {
+        return Files.isDirectory(Paths.get(path));
     }
 }

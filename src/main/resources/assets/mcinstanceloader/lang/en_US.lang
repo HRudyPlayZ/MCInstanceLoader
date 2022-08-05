@@ -11,3 +11,4 @@ gui.mcinstanceloader.continue=Continue anyways
 
 # Optional resources GUI
 gui.mcinstanceloader.confirm=Confirm and continue
+gui.mcinstanceloader.waitbutton=Downloading, please wait...

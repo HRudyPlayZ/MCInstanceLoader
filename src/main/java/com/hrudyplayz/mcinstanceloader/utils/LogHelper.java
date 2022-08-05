@@ -7,29 +7,50 @@ import com.hrudyplayz.mcinstanceloader.ModProperties;
 
 import java.time.LocalDateTime;
 
+/**
+An helper class to print stuff to logs, also handles the mod's specific log file.
+
+@author HRudyPlayZ
+*/
 @SuppressWarnings("unused")
 public class LogHelper {
-// This class is used to handle both printing to the game's logs, and outputing to mod log file.
 
+    /**
+    Prints a certain object (probably a {@link String}), both in the game logs and the mod logs.
+
+     @param level The {@link Level}'s level of importance.
+     @param object The object to print.
+     */
     public static void log(Level level, Object object) {
-    // Prints a certain object (probably a string) both in game log and the mod log.
-
         appendToLog(level, object, false);
         FMLLog.log(ModProperties.NAME, level, String.valueOf(object));
     }
 
-    public static void appendToLog(Level level, Object object, boolean skipFormat) {
-    // Adds a certain object (probably a string) to the mod log, the skipFormat boolean disables the formating with time and level.
 
+    /**
+    Prints a certain object (probably a {@link String}), to the mod's log file.
+
+    @param level The {@link Level}'s level of importance.
+    @param object The object to print.
+    @param skipFormat Whether to disable the formating with time and level or not.
+    */
+    public static void appendToLog(Level level, Object object, boolean skipFormat) {
         String text = String.valueOf(object);
         LocalDateTime now = LocalDateTime.now();
+
         if (!skipFormat) text = "[" + now.getHour() + ":" + now.getMinute() + ":" + now.getSecond() + "] " + level.toString() + ": " + text;
+
         FileHelper.appendFile(Config.configFolder + "details.log", new String[]{text});
     }
 
-    public static void verboseInfo (Object object) {
-    // Prints a certain object (probably a string) both in the game log if the verbose mode is enabled and in the mod log.
 
+    /**
+    Prints a certain object (probably a {@link String}) both to the mod's log and, if verbose mode is enabled, in the game's logs.
+    The importance level will be sent to {@link Level#INFO}.
+
+    @param object
+    */
+    public static void verboseInfo (Object object) {
         appendToLog(Level.INFO, object, false);
         if (Config.verboseMode) LogHelper.info(object);
     }

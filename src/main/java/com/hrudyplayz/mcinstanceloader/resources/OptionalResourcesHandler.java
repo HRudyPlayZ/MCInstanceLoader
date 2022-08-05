@@ -57,11 +57,11 @@ public class OptionalResourcesHandler {
 				if (object.downloadFile()) {
 					if (!object.checkHash()) Main.throwError("Could not verify the hash of " + object.name + ".");
 					else if (!object.checkCache() && !Config.disableCache) {
-						if (object.SHA512 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "SHA512-" + object.SHA512, true);
-						else if (object.SHA256 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "SHA256-" + object.SHA256, true);
-						else if (object.SHA1 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "SHA1-" + object.SHA1, true);
-						else if (object.MD5 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "MD5-" + object.MD5, true);
-						else if (object.CRC32 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "CRC32-" + object.CRC32, true);
+						if (object.SHA512 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "SHA512-" + object.SHA512);
+						else if (object.SHA256 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "SHA256-" + object.SHA256);
+						else if (object.SHA1 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "SHA1-" + object.SHA1);
+						else if (object.MD5 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "MD5-" + object.MD5);
+						else if (object.CRC32 != null) FileHelper.copy(object.destination, "mcinstance-cache" + File.separator + "CRC32-" + object.CRC32);
 					}
 				}
 				else Main.throwError("Error while downloading " + object.name + ".");

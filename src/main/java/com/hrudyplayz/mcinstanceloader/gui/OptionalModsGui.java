@@ -58,6 +58,7 @@ public class OptionalModsGui extends GuiScreen {
 
 	public static boolean runOnceDone = false; // Only runs the runOnce function once.
 	public static boolean cantClick = false; // Prevents double clicking on buttons.
+	public static boolean waitingText = false; // Whether the confirm button text should show the waiting text instead.
 
 	public GuiScreen parentGuiScreen;
 
@@ -143,6 +144,7 @@ public class OptionalModsGui extends GuiScreen {
 		if (pageList.size() == 0) {
 			currentMenu += 1;
 			currentPage = 0;
+			waitingText = false;
 			updateChecked();
 			refreshGui();
 			return;
@@ -202,7 +204,10 @@ public class OptionalModsGui extends GuiScreen {
 		// Adds the "Confirm and continue" button, with the appropriate color.
 		String color = "";
 		if (!(checkedOptions.size() >= optionalList[currentMenu].minimumCheckedAmount)) color = "" + EnumChatFormatting.GRAY;
-		createButton(14, nextButtonX, buttonHeight, buttonWidth, color + I18n.format("gui.mcinstanceloader.confirm"));
+
+		String text = I18n.format("gui.mcinstanceloader.confirm");
+		if (waitingText) text = I18n.format("gui.mcinstanceloader.waitbutton");
+		createButton(14, nextButtonX, buttonHeight, buttonWidth, color + text);
 	}
 
 	@Override
@@ -286,10 +291,14 @@ public class OptionalModsGui extends GuiScreen {
 			}
 
 			if (button.id == 14 && checkedOptions.size() >= optionalList[currentMenu].minimumCheckedAmount) {
+				waitingText = true;
+				refreshGui();
+
 				for (OptionalResourcesHandler.MenuOption o : checkedOptions) o.download();
 
 				currentMenu += 1;
 				currentPage = 0;
+				waitingText = false;
 				updateChecked();
 				refreshGui();
 			}
@@ -335,7 +344,7 @@ public class OptionalModsGui extends GuiScreen {
 	}
 
 
-	public GuiButton createButton (int id, int x, int y, int width, String text) {
+	public GuiButton createButton(int id, int x, int y, int width, String text) {
 	// Helper function to create buttons more easily, and return them to modify them afterwards.
 
 		GuiButton result = new GuiButton(id, x, y, width, 20, text);

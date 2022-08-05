@@ -39,7 +39,6 @@ import static net.lingala.zip4j.progress.ProgressMonitor.Task.REMOVE_ENTRY;
 import static net.lingala.zip4j.util.CrcUtil.computeFileCrc;
 import static net.lingala.zip4j.util.FileUtils.assertFilesExist;
 import static net.lingala.zip4j.util.FileUtils.getRelativeFileName;
-import static net.lingala.zip4j.util.Zip4jUtil.epochToExtendedDosTime;
 
 public abstract class AbstractAddFileToZipTask<T> extends AsyncZipTask<T> {
 
@@ -197,10 +196,11 @@ public abstract class AbstractAddFileToZipTask<T> extends AsyncZipTask<T> {
     headerWriter.updateLocalFileHeader(fileHeader, getZipModel(), splitOutputStream);
   }
 
+  // Suppressing warning to use BasicFileAttributes as this has trouble reading symlink's attributes
+  @SuppressWarnings("BulkFileAttributesRead")
   private ZipParameters cloneAndAdjustZipParameters(ZipParameters zipParameters, File fileToAdd,
                                                     ProgressMonitor progressMonitor) throws IOException {
     ZipParameters clonedZipParameters = new ZipParameters(zipParameters);
-    clonedZipParameters.setLastModifiedFileTime(epochToExtendedDosTime((fileToAdd.lastModified())));
 
     if (fileToAdd.isDirectory()) {
       clonedZipParameters.setEntrySize(0);
@@ -208,8 +208,11 @@ public abstract class AbstractAddFileToZipTask<T> extends AsyncZipTask<T> {
       clonedZipParameters.setEntrySize(fileToAdd.length());
     }
 
+    if (zipParameters.getLastModifiedFileTime() <= 0) {
+      clonedZipParameters.setLastModifiedFileTime(fileToAdd.lastModified());
+    }
+
     clonedZipParameters.setWriteExtendedLocalFileHeader(false);
-    clonedZipParameters.setLastModifiedFileTime(fileToAdd.lastModified());
 
     if (!Zip4jUtil.isStringNotNullAndNotEmpty(zipParameters.getFileNameInZip())) {
       String relativeFileName = getRelativeFileName(fileToAdd, zipParameters);
@@ -217,8 +220,8 @@ public abstract class AbstractAddFileToZipTask<T> extends AsyncZipTask<T> {
     }
 
     if (fileToAdd.isDirectory()) {
-      clonedZipParameters.setCompressionMethod(CompressionMethod.STORE);
-      clonedZipParameters.setEncryptionMethod(EncryptionMethod.NONE);
+      clonedZipParameters.setCompressionMethod(STORE);
+      clonedZipParameters.setEncryptionMethod(NONE);
       clonedZipParameters.setEncryptFiles(false);
     } else {
       if (clonedZipParameters.isEncryptFiles() && clonedZipParameters.getEncryptionMethod() == ZIP_STANDARD) {
@@ -228,7 +231,7 @@ public abstract class AbstractAddFileToZipTask<T> extends AsyncZipTask<T> {
       }
 
       if (fileToAdd.length() == 0) {
-        clonedZipParameters.setCompressionMethod(CompressionMethod.STORE);
+        clonedZipParameters.setCompressionMethod(STORE);
       }
     }
 

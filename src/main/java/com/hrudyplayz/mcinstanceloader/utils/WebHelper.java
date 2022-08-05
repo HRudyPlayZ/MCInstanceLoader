@@ -3,6 +3,7 @@ package com.hrudyplayz.mcinstanceloader.utils;
 import java.io.File;
 import java.io.IOException;
 import java.net.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
@@ -10,18 +11,30 @@ import org.apache.commons.io.FileUtils;
 import com.hrudyplayz.mcinstanceloader.Config;
 import com.hrudyplayz.mcinstanceloader.Main;
 
+/**
+An helper class to download files from the internet.
 
+@author HRudyPlayZ
+*/
 @SuppressWarnings("unused")
 public class WebHelper {
-// This class will allow to download a file from the internet.
 
     // Defines the client properties, uses Twitch UserAgents to make every website work correctly as they should.
     public static String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) twitch-desktop-electron-platform/1.0.0 Chrome/73.0.3683.121 Electron/5.0.12 Safari/537.36 desklight/8.51.0";
     public static String REFERER = "https://www.google.com";
 
-    public static boolean downloadFile (String fileURL, String savePath) {
-    // Lets you download a file from a specific URL and save it to a location.
+    /**
+    Downloads a specific file from an internet address and saves it to a given location.
 
+    @param fileURL The URL of the file.
+    @param savePath Where to save the downloaded file on the disk.
+    @return Whether the operation succeeded or not.
+    */
+    public static boolean downloadFile(String fileURL, String savePath) {
+        return downloadFile(fileURL, savePath, false);
+    }
+
+    private static boolean downloadFile(String fileURL, String savePath, boolean doneIOException) {
         URL url;
         try {
             url = new URL(fileURL);
@@ -54,14 +67,35 @@ public class WebHelper {
             return true;
         }
         catch (IOException e) {
-            Main.errorContext = "There was an issue writing to file.";
-            return false;
-        }
+            if (!doneIOException) {
+                LogHelper.info("An error occured while downloading the file, trying again...");
+                try {
+                    TimeUnit.MILLISECONDS.sleep(1000);
+                }
+                catch (InterruptedException ignore) {}
 
+                return downloadFile(fileURL, savePath);
+            }
+            else {
+                Main.errorContext = "There was an issue writing to file.";
+                return false;
+            }
+        }
     }
 
 
-    public static boolean downloadFile (String fileURL, String savePath, String[] follows) {
+    /**
+    Downloads a specific file from an internet address and saves it to a given location.
+    It will first follow a list of buttons on the page to get to the final URL of the file.
+    To get to the final URL, this function will try to simulate a click on every HTML object with a given text, in order.
+    To do that, it will follow the href of such objects.
+
+    @param fileURL The URL of the starting page.
+    @param savePath Where to save the downloaded file on the disk.
+    @param follows A list of buttons to follow in the right order.
+    @return Whether the operation succeeded or not.
+    */
+    public static boolean downloadFile(String fileURL, String savePath, String[] follows) {
     // Lets you download a file from a specific URL and save it to a location.
     // Will follow any button with a text present in the follows list.
 

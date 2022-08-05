@@ -18,6 +18,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.regex.Matcher;
 
 import static net.lingala.zip4j.util.InternalZipConstants.FILE_SEPARATOR;
 
@@ -48,12 +49,7 @@ public abstract class AbstractExtractFileTask<T> extends AsyncZipTask<T> {
     File outputFile = determineOutputFile(fileHeader, outputPath, newFileName);
     progressMonitor.setFileName(outputFile.getAbsolutePath());
 
-    // make sure no file is extracted outside of the target directory (a.k.a zip slip)
-    String outputCanonicalPath = (new File(outputPath).getCanonicalPath()) + File.separator;
-    if (!outputFile.getCanonicalPath().startsWith(outputCanonicalPath)) {
-      throw new ZipException("illegal file name that breaks out of the target directory: "
-          + fileHeader.getFileName());
-    }
+    assertCanonicalPathsAreSame(outputFile, outputPath, fileHeader);
 
     verifyNextEntry(zipInputStream, fileHeader);
 
@@ -71,6 +67,22 @@ public abstract class AbstractExtractFileTask<T> extends AsyncZipTask<T> {
     }
 
     UnzipUtil.applyFileAttributes(fileHeader, outputFile);
+  }
+
+  private void assertCanonicalPathsAreSame(File outputFile, String outputPath, FileHeader fileHeader)
+      throws IOException {
+
+    String outputFileCanonicalPath = outputFile.getCanonicalPath();
+    if (outputFile.isDirectory() && !outputFileCanonicalPath.endsWith(FILE_SEPARATOR)) {
+      outputFileCanonicalPath = outputFileCanonicalPath + FILE_SEPARATOR;
+    }
+
+    // make sure no file is extracted outside the target directory (a.k.a. zip slip)
+    String outputCanonicalPath = (new File(outputPath).getCanonicalPath()) + File.separator;
+    if (!outputFileCanonicalPath.startsWith(outputCanonicalPath)) {
+      throw new ZipException("illegal file name that breaks out of the target directory: "
+          + fileHeader.getFileName());
+    }
   }
 
   private boolean isSymbolicLink(FileHeader fileHeader) {
@@ -162,7 +174,12 @@ public abstract class AbstractExtractFileTask<T> extends AsyncZipTask<T> {
     if (Zip4jUtil.isStringNotNullAndNotEmpty(newFileName)) {
       outputFileName = newFileName;
     }
-    return new File(outputPath + FILE_SEPARATOR + outputFileName);
+    return new File(outputPath, getFileNameWithSystemFileSeparators(outputFileName));
+  }
+
+  private String getFileNameWithSystemFileSeparators(String fileNameToReplace) {
+    String formattedFileName = fileNameToReplace.replaceAll(":\\\\", "_");
+    return formattedFileName.replaceAll("[/\\\\]", Matcher.quoteReplacement(FILE_SEPARATOR));
   }
 
   @Override

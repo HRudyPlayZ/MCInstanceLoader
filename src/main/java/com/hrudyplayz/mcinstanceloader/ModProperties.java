@@ -10,7 +10,7 @@ public class ModProperties {
     // General values
     public static final String MODID = "mcinstanceloader";
     public static final String NAME = "MCInstance Loader";
-    public static final String VERSION = "2.1";
+    public static final String VERSION = "2.2";
     public static final String MC_VERSION = "1.7.10";
     public static final String URL = "https://github.com/HRudyPlayZ/MCInstanceLoader/";
 
@@ -48,7 +48,7 @@ public class ModProperties {
             "Also try ResourcceLoader",
             "Finally updated!",
             "Check the documentation on Github.",
-            "2.0.0.0.0, also known as 2.0: The overhaul!",
+            "2.2, finally bug-free (i hope).",
             "Since you're here, you might want to support the mod on Github and Modrinth!",
             "The most memes you can get, in one package.",
             "Every modpack needs this!",

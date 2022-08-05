@@ -206,7 +206,7 @@ public class InfoGui extends GuiScreen {
     }
 
 
-    public GuiButton createButton (int id, int x, int y, int width, String text) {
+    public GuiButton createButton(int id, int x, int y, int width, String text) {
     // Helper function to create buttons more easily, and return them to modify them afterwards.
 
         GuiButton result = new GuiButton(id, x, y, width, 20, text);
