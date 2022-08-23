@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.hrudyplayz.mcinstanceloader.Config;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.io.FileUtils;
@@ -80,6 +81,7 @@ public class FileHelper {
             return true;
         }
         catch (IOException e) {
+            e.printStackTrace();
             if (!doneIOException) {
                 LogHelper.info("An error occured while creating the directory, trying again...");
                 try {
@@ -109,14 +111,19 @@ public class FileHelper {
         try {
             if (isInvalidPath(path)) return false; // Checks if the given path isn't valid.
 
+            if (FileHelper.exists(path)) FileHelper.delete(path);
+
+            String folder = path.substring(0, path.lastIndexOf(File.separator));
+            if (!FileHelper.exists(folder)) FileHelper.createDirectory(folder);
+
             Path realPath = Paths.get(path);
-            Files.deleteIfExists(realPath);
             Files.createFile(realPath);
 
             return true;
         }
 
         catch (IOException e) {
+            e.printStackTrace();
             if (!doneIOException) {
                 LogHelper.info("An error occured while creating the file, trying again...");
                 try {
@@ -155,6 +162,7 @@ public class FileHelper {
         }
 
         catch (IOException e) {
+            e.printStackTrace();
             if (!doneIOException) {
                 LogHelper.info("An error occured while changing the file, trying again...");
                 try {
@@ -192,6 +200,7 @@ public class FileHelper {
         }
 
         catch (IOException e) {
+            e.printStackTrace();
             if (!doneIOException) {
                 LogHelper.info("An error occured while overwriting the file, trying again...");
                 try {
@@ -229,6 +238,7 @@ public class FileHelper {
         }
 
         catch (IOException e) {
+            e.printStackTrace();
             if (!doneIOException) {
                 LogHelper.info("An error occured while reading the file, trying again...");
                 try {
@@ -315,6 +325,7 @@ public class FileHelper {
         }
 
         catch (IOException e) {
+            e.printStackTrace();
             if (!doneIOException) {
                 LogHelper.info("An error occured while copying the file, trying again...");
                 try {
@@ -371,6 +382,7 @@ public class FileHelper {
         }
 
         catch (IOException e) {
+            e.printStackTrace();
             if (!doneIOException) {
                 LogHelper.info("An error occured while deleting the file, trying again...");
                 try {

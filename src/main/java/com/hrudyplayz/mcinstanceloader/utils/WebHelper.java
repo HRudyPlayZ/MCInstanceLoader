@@ -74,7 +74,7 @@ public class WebHelper {
                 }
                 catch (InterruptedException ignore) {}
 
-                return downloadFile(fileURL, savePath);
+                return downloadFile(fileURL, savePath, true);
             }
             else {
                 Main.errorContext = "There was an issue writing to file.";

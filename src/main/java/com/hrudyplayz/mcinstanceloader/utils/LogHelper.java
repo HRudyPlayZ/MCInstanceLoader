@@ -40,7 +40,7 @@ public class LogHelper {
 
         if (!skipFormat) text = "[" + now.getHour() + ":" + now.getMinute() + ":" + now.getSecond() + "] " + level.toString() + ": " + text;
 
-        FileHelper.appendFile(Config.configFolder + "details.log", new String[]{text});
+        if (FileHelper.exists(Config.configFolder + "details.log")) FileHelper.appendFile(Config.configFolder + "details.log", new String[]{text});
     }
 
 
