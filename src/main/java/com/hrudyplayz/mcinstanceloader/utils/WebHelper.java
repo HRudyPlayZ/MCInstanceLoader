@@ -48,7 +48,7 @@ public class WebHelper {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setInstanceFollowRedirects(true);
-
+            
             connection.setReadTimeout(Config.connectionTimeout * 1000);
             connection.setConnectTimeout(Config.connectionTimeout * 1000);
 

@@ -113,15 +113,16 @@ public class FileHelper {
 
             if (FileHelper.exists(path)) FileHelper.delete(path);
 
-            String folder = path.substring(0, path.lastIndexOf(File.separator));
-            if (!FileHelper.exists(folder)) FileHelper.createDirectory(folder);
+            if (path.contains(File.separator)) {
+                String folder = path.substring(0, path.lastIndexOf(File.separator));
+                if (!FileHelper.exists(folder)) FileHelper.createDirectory(folder);
+            }
 
             Path realPath = Paths.get(path);
             Files.createFile(realPath);
 
             return true;
         }
-
         catch (IOException e) {
             e.printStackTrace();
             if (!doneIOException) {
@@ -160,7 +161,6 @@ public class FileHelper {
 
             return true;
         }
-
         catch (IOException e) {
             e.printStackTrace();
             if (!doneIOException) {
@@ -193,7 +193,7 @@ public class FileHelper {
             if (isInvalidPath(path)) return false; // Checks if the given path isn't valid.
 
             Path realPath = Paths.get(path);
-            createFile(path);
+            if (!exists(path)) createFile(path);
             Files.write(realPath, Arrays.asList(lines), StandardCharsets.UTF_8);
 
             return true;
@@ -306,8 +306,6 @@ public class FileHelper {
 
     private static boolean copy(String source, String target, boolean doneIOException) {
         try {
-            Path sourcePath = Paths.get(source);
-
             if (isInvalidPath(source)) return false; // Checks if the source path isn't valid.
             if (isInvalidPath(target)) return false; // Checks if the target path isn't valid.
 
@@ -316,10 +314,10 @@ public class FileHelper {
                 if (!exists(path)) createDirectory(path);
             }
 
-            if (exists(target)) delete(target);
+            if (!isDirectory(target) && exists(target)) overwriteFile(target, new String[0]);
 
-            if (Files.isDirectory(sourcePath)) FileUtils.copyDirectory(new File(source), new File(target));
-            else Files.copy(sourcePath, Paths.get(target), StandardCopyOption.REPLACE_EXISTING);
+            if (isDirectory(source)) FileUtils.copyDirectory(new File(source), new File(target));
+            else Files.copy(Paths.get(source), Paths.get(target), StandardCopyOption.REPLACE_EXISTING);
 
             return true;
         }

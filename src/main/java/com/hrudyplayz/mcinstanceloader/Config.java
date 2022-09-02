@@ -48,7 +48,10 @@ public class Config {
         deleteInsteadOfRenaming = config.getBoolean("Delete MCInstance directly", CATEGORY_BEHAVIOR, false, "Wheter to delete the pack.mcinstance file instead of renaming it.");
         disableStopModRepostsCheck = config.getBoolean("Disable StopModReposts check", CATEGORY_BEHAVIOR, false, "Whether to disable the StopModReposts check, used to prevent the use of malware sites. It's recommended to keep it enabled.");
         disableCache = config.getBoolean("Disable the cache system", CATEGORY_BEHAVIOR, false, "Whether to disable the cache system, forcing every resource to be downloaded regardless of the cached value.");
+
         disableAutomaticZipCreation = config.getBoolean("Disable the automatic zipping system for the pack folder", CATEGORY_BEHAVIOR, false, "Whether to disable the automatic creation of the pack.mcinstance file from the pack folder.");
+        if (deleteInsteadOfRenaming && !disableAutomaticZipCreation) disableAutomaticZipCreation = true;
+
         connectionTimeout = config.getInt("Web connection timeout", CATEGORY_BEHAVIOR, 100, 0, Integer.MAX_VALUE, "The amount of seconds the mod will wait to receive a response for downloads. Zero for no timeout at all (not recommended).");
 
         curseforgeURL = config.getString("CFCore proxy URL", CATEGORY_BEHAVIOR, "http://api-pocket.com/", "The URL to use for the CFCore API. Any proxy works. Leave blank to use the official CFCore one. Defaults to a simple proxy.");

@@ -120,6 +120,23 @@ public class InfoGui extends GuiScreen {
         Keyboard.enableRepeatEvents(false);
     }
 
+    @Override
+    protected void keyTyped(char c, int keyCode) {
+        if (keyCode == 1 && Main.hasUpdate) {
+            // Sets the has update variable to false.
+            Main.hasUpdate = false;
+
+            // Clears the current GUI
+            this.buttonList.clear();
+            textList.clear();
+
+            // Runs the second phase again. (for real this time).
+            Main.secondPhase();
+
+            // Switches the GUI to the OptionalModsGui
+            this.mc.displayGuiScreen(new OptionalModsGui(this.parentGuiScreen));
+        }
+    }
 
     @Override
     protected void actionPerformed(GuiButton button) {

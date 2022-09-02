@@ -1,6 +1,7 @@
 package com.hrudyplayz.mcinstanceloader.resources;
 
 import com.hrudyplayz.mcinstanceloader.Config;
+import com.hrudyplayz.mcinstanceloader.Main;
 import com.hrudyplayz.mcinstanceloader.utils.FileHelper;
 
 import java.io.File;
@@ -98,6 +99,21 @@ public class PackConfigParser {
 
                         case "side":
                             resource.side = value.toLowerCase();
+
+                            if (!Main.side.equals(resource.side) && !resource.side.equals("both") &&
+                                (resource.side.equals("client") || resource.side.equals("server"))) {
+
+                                HashMap<String, ResourceObject> dict = OptionalResourcesHandler.resourcesDict;
+                                if (dict.containsKey(resource.name)) dict.remove(resource.name);
+
+                                result.remove(resource);
+                            }
+                            else if (!resource.isOptional && !result.contains(resource)) result.add(resource);
+                            else {
+                                HashMap<String, ResourceObject> dict = OptionalResourcesHandler.resourcesDict;
+                                if (!dict.containsKey(resource.name)) dict.put(resource.name, resource);
+                            }
+
                             break;
 
                         case "SHA512": // Allows to type either SHA512 or SHA-512.
@@ -174,7 +190,6 @@ public class PackConfigParser {
 
                 // Defines the behavior to do on each object depending on which property gets modified (incorrect properties will get ignored).
                 if (value.length() > 0) {
-
                     switch (property) {
 
                         case "title":
@@ -201,6 +216,8 @@ public class PackConfigParser {
                             break;
 
                         default:
+
+                            if (!property.matches("option\\d+\\..*")) break;
 
                             int id = -1;
                             try {
@@ -239,7 +256,6 @@ public class PackConfigParser {
 
                             break;
                     }
-
                 }
             }
 

@@ -1,6 +1,7 @@
 package com.hrudyplayz.mcinstanceloader.resources;
 
 import net.minecraft.client.Minecraft;
+import org.lwjgl.Sys;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -417,58 +418,54 @@ public class ResourceObject {
             }
         }
 
-        // If the specified side is the current one or if the side property is incorrect/unchanged.
-        if (Main.side.equals(this.side) || (this.side.equals("both")) ||
-           (!this.side.equals("client") && !this.side.equals("server"))) {
+        // Support for curseforge's API.
+        if (this.type.equals("curseforge")) {
 
-            // Support for curseforge's API.
-            if (this.type.equals("curseforge")) {
+            // If the file already has hashes defined and is already in cache, it won't do any request.
+            if (this.checkCache()) return true;
 
-                // If the file already has hashes defined and is already in cache, it won't do any request.
-                if (this.checkCache()) return true;
+            // If the mod can generate the download URL without doing any API call, it will do that instead.
+            if (projectId == null && genCurseforgeUrl()) return true;
 
-                // If the mod can generate the download URL without doing any API call, it will do that instead.
-                if (projectId == null && genCurseforgeUrl()) return true;
+            // Otherwise, it will use the Curseforge API to grab stuff like the download url, file name and SHA-1 hash.
+            if (getCurseforgeData()) {
+                if (checkCache()) return true; // If the file is already cached using this downloaded hash, it won't download anything else.
 
-                // Otherwise, it will use the Curseforge API to grab stuff like the download url, file name and SHA-1 hash.
-                if (getCurseforgeData()) {
-                    if (checkCache()) return true; // If the file is already cached using this downloaded hash, it won't download anything else.
-                    if (genCurseforgeUrl()) return true; // If the mod was able to generate a download URL from those properties, it will use it.
-                }
-                else {
-                    Main.errorContext = "Error while getting the data from Curseforge.";
-                    return false;
-                }
-
-                this.follows = new String[0]; // Sets the follows list to be empty, so the WebHelper class doesn't try to follow it if the user specified it.
+                String urlBackup = this.url;
+                if (genCurseforgeUrl()) return true; // If the mod was able to generate a download URL from those properties, it will use it.
+                else this.url = urlBackup;
+            }
+            else {
+                Main.errorContext = "Error while getting the data from Curseforge.";
+                return false;
             }
 
-
-            // Support for Modrinth's API.
-            else if (this.type.equals("modrinth")) {
-
-                // If the file already has hashes defined and is already in cache, it won't do any request.
-                if (this.checkCache()) return true;
-
-                if (getModrinthData()) {
-                    if (checkCache()) return true;
-                }
-                else {
-                    Main.errorContext = "Error while getting the data from Modrinth.";
-                    return false;
-                }
-
-                this.follows = new String[0]; // Sets the follows list to be empty, so the WebHelper class doesn't try to follow it if the user specified it.
-            }
-
-            // If it didn't download it from before (so either it's not of curseforge type, the resource didn't have a sourceFileName specified, or the direct download failed),
-            // it will download it here. Anything other than the curseforge or modrinth type will directly go here.
-
-            if (this.follows.length <= 0) return WebHelper.downloadFile(this.url, this.destination);
-            else return WebHelper.downloadFile(this.url, this.destination, this.follows);
+            this.follows = new String[0]; // Sets the follows list to be empty, so the WebHelper class doesn't try to follow it if the user specified it.
         }
 
-        return true; // If the side doesn't correspond, it succesfully skipped it.
+
+        // Support for Modrinth's API.
+        else if (this.type.equals("modrinth")) {
+
+            // If the file already has hashes defined and is already in cache, it won't do any request.
+            if (this.checkCache()) return true;
+
+            if (getModrinthData()) {
+                if (checkCache()) return true;
+            }
+            else {
+                Main.errorContext = "Error while getting the data from Modrinth.";
+                return false;
+            }
+
+            this.follows = new String[0]; // Sets the follows list to be empty, so the WebHelper class doesn't try to follow it if the user specified it.
+        }
+
+        // If it didn't download it from before (so either it's not of curseforge type, the resource didn't have a sourceFileName specified, or the direct download failed),
+        // it will download it here. Anything other than the curseforge or modrinth type will directly go here.
+
+        if (this.follows.length <= 0) return WebHelper.downloadFile(this.url, this.destination);
+        else return WebHelper.downloadFile(this.url, this.destination, this.follows);
     }
 
 }
