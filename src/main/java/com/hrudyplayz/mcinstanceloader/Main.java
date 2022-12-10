@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
 
+import net.minecraft.server.MinecraftServer;
 import org.apache.logging.log4j.Level;
 
 import net.minecraft.client.resources.I18n;
@@ -551,7 +552,11 @@ public class Main {
 
         LogHelper.error(text); // Adds the error to the general game log and the mod log.
 
-        if (side.equals("server")) return;
+        if (side.equals("server")) {
+            LogHelper.info("Failed to install the mcinstance file!");
+            MinecraftServer.getServer().initiateShutdown();
+            return;
+        };
 
         text = "- " + text; // Formats the text to look like an error list.
 
@@ -575,6 +580,7 @@ public class Main {
 
         if (side.equals("server")) {
             LogHelper.info("Succesfully installed the mcinstance file!");
+            MinecraftServer.getServer().initiateShutdown();
             return;
         }
 
