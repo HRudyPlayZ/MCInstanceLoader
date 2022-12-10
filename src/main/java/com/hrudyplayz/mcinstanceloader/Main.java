@@ -413,6 +413,7 @@ public class Main {
 
             // Creates the forge progressbar for the current step, so it can be displayed on the loading screen.
             ProgressManager.ProgressBar progress = ProgressManager.push("MCInstance: Downloading resource", list.length, true);
+            int progressCount = 0;
 
             // Grabs the current list of blacklisted sites from StopModReposts.
             if (!Config.disableStopModRepostsCheck) {
@@ -430,7 +431,12 @@ public class Main {
                 LogHelper.appendToLog(Level.INFO, "==================================================", true);
                 object.appendToLog();
 
-                LogHelper.verboseInfo("Attempting to download the resource " + object.name + "...");
+                if (!Config.verboseMode && side.equals("server")) {
+                    progressCount++;
+                    LogHelper.info("Downloading " + object.name + "... | (" + progressCount + "/" + list.length + " mods)");
+                }
+
+                LogHelper.verboseInfo("Attempting to download the resource " + object.name + " | (" + progressCount + "/" + list.length + " mods)");
 
                 if (object.downloadFile()) {
                     if (!object.checkHash()) throwError("Could not verify the hash of " + object.name + ".");
@@ -582,6 +588,8 @@ public class Main {
 
         if (side.equals("server")) {
             LogHelper.info("Succesfully installed the mcinstance file!");
+            LogHelper.info("The server will now restart to complete the setup.");
+
             MinecraftServer.getServer().initiateShutdown();
             return;
         }
