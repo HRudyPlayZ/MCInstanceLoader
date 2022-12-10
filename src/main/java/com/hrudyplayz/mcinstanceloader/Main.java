@@ -99,6 +99,7 @@ public class Main {
 
         // ===== STEP 6: Overrides copy =====
         copyOverrides();
+        copyLocalizedOverrides();
         LogHelper.appendToLog(Level.INFO, "", true); // Adds an empty line to the log file, to make it more readable.
 
         // ===== STEP 7: Carryover copy =====
@@ -196,11 +197,24 @@ public class Main {
             // The pack directory
             FileHelper.createDirectory(path);
 
-            // The overrides directory
+            // The main overrides directory
             FileHelper.createDirectory(path + File.separator + "overrides");
-            FileHelper.overwriteFile(path + File.separator + "overrides" + File.separator + "example.txt", new String[]{"Example file that would be at root.", "Created my MCInstance Loader."});
+            FileHelper.overwriteFile(path + File.separator + "overrides" + File.separator + "example.txt", new String[]{"Example file that would be at root. Applies to both client-side and server-side.", "Created my MCInstance Loader."});
             FileHelper.createDirectory(path + File.separator + "overrides" + File.separator + "mods");
-            FileHelper.overwriteFile(path + File.separator + "overrides" + File.separator + "mods" + File.separator + "example2.txt", new String[]{"Example file that would be in the mods folder.", "Created by MCInstance Loader."});
+            FileHelper.overwriteFile(path + File.separator + "overrides" + File.separator + "mods" + File.separator + "example2.txt", new String[]{"Example file that would be in the mods folder. Applies to both client-side and server-side.", "Created by MCInstance Loader."});
+
+            // The client overrides directory
+            FileHelper.createDirectory(path + File.separator + "client_overrides");
+            FileHelper.overwriteFile(path + File.separator + "client_overrides" + File.separator + "example.txt", new String[]{"Example file that would be at root. Client-side only", "Created my MCInstance Loader."});
+            FileHelper.createDirectory(path + File.separator + "client_overrides" + File.separator + "mods");
+            FileHelper.overwriteFile(path + File.separator + "client_overrides" + File.separator + "mods" + File.separator + "example2.txt", new String[]{"Example file that would be in the mods folder. Client-side only", "Created by MCInstance Loader."});
+
+            // The server overrides directory
+            FileHelper.createDirectory(path + File.separator + "server_overrides");
+            FileHelper.overwriteFile(path + File.separator + "server_overrides" + File.separator + "example.txt", new String[]{"Example file that would be at root. Server-side only", "Created my MCInstance Loader."});
+            FileHelper.createDirectory(path + File.separator + "server_overrides" + File.separator + "mods");
+            FileHelper.overwriteFile(path + File.separator + "server_overrides" + File.separator + "mods" + File.separator + "example2.txt", new String[]{"Example file that would be in the mods folder. Server-side only", "Created by MCInstance Loader."});
+
 
             // The metadata.packconfig file.
             FileHelper.overwriteFile(path + File.separator + "metadata.packconfig", new String[]{
@@ -483,6 +497,38 @@ public class Main {
 
                 // Tries to move (merge) the file, if it fails it throws an error.
                 if (!FileHelper.copy(Config.configFolder + "temp" + File.separator + "overrides" + File.separator + s, s)) throwError("Error while merging the file " + s + " from the overrides folder.");
+
+                errorContext = ""; // Resets the errorContext, so it can be reused for the next resource or the next step.
+            }
+
+            ProgressManager.pop(progress); // Deletes the progressbar, as it doesn't need to be shown anymore (all files have been done).
+        }
+    }
+
+    public static void copyLocalizedOverrides() {
+        // Overrides copy: Replaces the minecraft files with the ones in the overrides folder.
+        String overrideType = (side.equals("client")) ? "client_overrides" : "server_overrides";
+
+        String path = Config.configFolder + "temp" + File.separator + overrideType;
+
+        // If there wasn't any error that occured on the previous steps.
+        if (!hasErrorOccured && !hasUpdate && FileHelper.exists(path) && FileHelper.isDirectory(path)) {
+            LogHelper.info("Moving the files from the " + overrideType + " folder.");
+
+            // Creates the recursive file list, to merge from.
+            String[] fileList = FileHelper.listDirectory(Config.configFolder + "temp" + File.separator + overrideType, true);
+
+            // Creates the forge progressbar for the current step, so it can be displayed on the loading screen.
+            ProgressManager.ProgressBar progress = ProgressManager.push("MCInstance: Merging " + overrideType + " folder", fileList.length, true);
+
+            // For every file/folder in the localized overrides folder, we move them to the root .minecraft folder.
+            for (String s : fileList) {
+                progress.step(s);
+
+                LogHelper.verboseInfo("Merging " + s + " with the original folder.");
+
+                // Tries to move (merge) the file, if it fails it throws an error.
+                if (!FileHelper.copy(Config.configFolder + "temp" + File.separator + overrideType + File.separator + s, s)) throwError("Error while merging the file " + s + " from the " + overrideType + " folder.");
 
                 errorContext = ""; // Resets the errorContext, so it can be reused for the next resource or the next step.
             }
