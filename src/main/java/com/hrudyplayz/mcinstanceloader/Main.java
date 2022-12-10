@@ -158,16 +158,18 @@ public class Main {
 
         Config.createConfigFile();
 
-        // Deletes the empty files in the mods folder
-        String[] list = FileHelper.listDirectory("mods", true);
-        for (String s : list) {
-            long size = -1;
-            try {
-                size = Files.size(Paths.get("mods" + File.separator + s));
-            }
-            catch (Exception ignore) {}
+        // Deletes the empty files in the mods folder, prior to an installation
+        if (FileHelper.exists(Config.configFolder + "pack.mcinstance")) {
+            String[] list = FileHelper.listDirectory("mods", true);
+            for (String s : list) {
+                long size = -1;
+                try {
+                    size = Files.size(Paths.get("mods" + File.separator + s));
+                } catch (Exception ignore) {
+                }
 
-            if (size == 0) FileHelper.delete("mods" + File.separator + s);
+                if (size == 0) FileHelper.delete("mods" + File.separator + s);
+            }
         }
 
         // If the carryover folder doesn't exist, it creates it with empty mods and config folders inside.
