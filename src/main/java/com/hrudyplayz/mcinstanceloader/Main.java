@@ -160,19 +160,16 @@ public class Main {
         Config.createConfigFile();
 
         // Deletes the empty files in the mods folder, prior to an installation
-        if (FileHelper.exists(Config.configFolder + "pack.mcinstance")) {
-            String[] list = FileHelper.listDirectory("mods", true);
-            for (String s : list) {
-                long size = -1;
-                try {
-                    size = Files.size(Paths.get("mods" + File.separator + s));
-                } catch (Exception ignore) {
-                }
-
-                if (size == 0) FileHelper.delete("mods" + File.separator + s);
+        String[] list = FileHelper.listDirectory("mods", true);
+        for (String s : list) {
+            long size = -1;
+            try {
+                size = Files.size(Paths.get("mods" + File.separator + s));
             }
-        }
+            catch (Exception ignore) {}
 
+            if (size == 0 && (FileHelper.exists(Config.configFolder + "pack.mcinstance") || s.startsWith("mcinstanceloader"))) FileHelper.delete("mods" + File.separator + s);
+        }
         // If the carryover folder doesn't exist, it creates it with empty mods and config folders inside.
         if (!FileHelper.exists("carryover")) {
             LogHelper.info("The carryover folder didn't exist, created a blank one.");
@@ -204,16 +201,16 @@ public class Main {
             FileHelper.overwriteFile(path + File.separator + "overrides" + File.separator + "mods" + File.separator + "example2.txt", new String[]{"Example file that would be in the mods folder. Applies to both client-side and server-side.", "Created by MCInstance Loader."});
 
             // The client overrides directory
-            FileHelper.createDirectory(path + File.separator + "client_overrides");
-            FileHelper.overwriteFile(path + File.separator + "client_overrides" + File.separator + "example.txt", new String[]{"Example file that would be at root. Client-side only", "Created my MCInstance Loader."});
-            FileHelper.createDirectory(path + File.separator + "client_overrides" + File.separator + "mods");
-            FileHelper.overwriteFile(path + File.separator + "client_overrides" + File.separator + "mods" + File.separator + "example2.txt", new String[]{"Example file that would be in the mods folder. Client-side only", "Created by MCInstance Loader."});
+            FileHelper.createDirectory(path + File.separator + "client-overrides");
+            FileHelper.overwriteFile(path + File.separator + "client-overrides" + File.separator + "example.txt", new String[]{"Example file that would be at root. Client-side only", "Created my MCInstance Loader."});
+            FileHelper.createDirectory(path + File.separator + "client-overrides" + File.separator + "mods");
+            FileHelper.overwriteFile(path + File.separator + "client-overrides" + File.separator + "mods" + File.separator + "example2.txt", new String[]{"Example file that would be in the mods folder. Client-side only", "Created by MCInstance Loader."});
 
             // The server overrides directory
-            FileHelper.createDirectory(path + File.separator + "server_overrides");
-            FileHelper.overwriteFile(path + File.separator + "server_overrides" + File.separator + "example.txt", new String[]{"Example file that would be at root. Server-side only", "Created my MCInstance Loader."});
-            FileHelper.createDirectory(path + File.separator + "server_overrides" + File.separator + "mods");
-            FileHelper.overwriteFile(path + File.separator + "server_overrides" + File.separator + "mods" + File.separator + "example2.txt", new String[]{"Example file that would be in the mods folder. Server-side only", "Created by MCInstance Loader."});
+            FileHelper.createDirectory(path + File.separator + "server-overrides");
+            FileHelper.overwriteFile(path + File.separator + "server-overrides" + File.separator + "example.txt", new String[]{"Example file that would be at root. Server-side only", "Created my MCInstance Loader."});
+            FileHelper.createDirectory(path + File.separator + "server-overrides" + File.separator + "mods");
+            FileHelper.overwriteFile(path + File.separator + "server-overrides" + File.separator + "mods" + File.separator + "example2.txt", new String[]{"Example file that would be in the mods folder. Server-side only", "Created by MCInstance Loader."});
 
 
             // The metadata.packconfig file.
@@ -447,10 +444,10 @@ public class Main {
 
                 if (!Config.verboseMode && side.equals("server")) {
                     progressCount++;
-                    LogHelper.info("Downloading " + object.name + "... | (" + progressCount + "/" + list.length + " mods)");
+                    LogHelper.info("Downloading " + object.name + "... (" + progressCount + "/" + list.length + " resources)");
                 }
 
-                LogHelper.verboseInfo("Attempting to download the resource " + object.name + " | (" + progressCount + "/" + list.length + " mods)");
+                LogHelper.verboseInfo("Attempting to download the resource " + object.name + "... (" + progressCount + "/" + list.length + " resources)");
 
                 if (object.downloadFile()) {
                     if (!object.checkHash()) throwError("Could not verify the hash of " + object.name + ".");
@@ -506,8 +503,8 @@ public class Main {
     }
 
     public static void copyLocalizedOverrides() {
-        // Overrides copy: Replaces the minecraft files with the ones in the overrides folder.
-        String overrideType = (side.equals("client")) ? "client_overrides" : "server_overrides";
+        // Overrides copy: Replaces the minecraft files with the ones in the localized overrides folder.
+        String overrideType = (side.equals("client")) ? "client-overrides" : "server-overrides";
 
         String path = Config.configFolder + "temp" + File.separator + overrideType;
 
@@ -634,7 +631,7 @@ public class Main {
 
         if (side.equals("server")) {
             LogHelper.info("Succesfully installed the mcinstance file!");
-            LogHelper.info("The server will now restart to complete the setup.");
+            LogHelper.info("The server will soon restart to apply its changes.");
 
             MinecraftServer.getServer().initiateShutdown();
             return;
