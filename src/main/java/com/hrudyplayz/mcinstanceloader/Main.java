@@ -172,13 +172,13 @@ public class Main {
 
             //Ignore folders
             if (FileHelper.isDirectory("mods" + File.separator + s))
-                return;
+                continue;
 
             LogHelper.verboseInfo("name: " + s + " | size: " + size);
 
             if (size == 0) {
-                FileHelper.delete("mods" + File.separator + s);
                 LogHelper.verboseInfo("Deleting file " + s);
+                FileHelper.delete("mods" + File.separator + s);
             }
         }
         // If the carryover folder doesn't exist, it creates it with empty mods and config folders inside.
