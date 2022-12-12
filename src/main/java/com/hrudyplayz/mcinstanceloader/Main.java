@@ -161,6 +161,8 @@ public class Main {
 
         // Deletes the empty files in the mods folder, prior to an installation
         String[] list = FileHelper.listDirectory("mods", true);
+        LogHelper.verboseInfo("Scanning 0 byte files scheduled for deletion");
+
         for (String s : list) {
             long size = -1;
             try {
@@ -168,7 +170,12 @@ public class Main {
             }
             catch (Exception ignore) {}
 
-            if (size == 0 && (FileHelper.exists(Config.configFolder + "pack.mcinstance") || s.startsWith("mcinstanceloader"))) FileHelper.delete("mods" + File.separator + s);
+            LogHelper.verboseInfo("name: " + s + " | size: " + size);
+
+            if (size == 0 && !(FileHelper.isDirectory("mods" + File.separator + s))) {
+                FileHelper.delete("mods" + File.separator + s);
+                LogHelper.verboseInfo("Deleting file " + s);
+            }
         }
         // If the carryover folder doesn't exist, it creates it with empty mods and config folders inside.
         if (!FileHelper.exists("carryover")) {
