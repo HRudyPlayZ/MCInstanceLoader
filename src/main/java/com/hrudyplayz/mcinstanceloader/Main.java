@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
 
+import net.minecraft.server.MinecraftServer;
 import org.apache.logging.log4j.Level;
 
 import net.minecraft.client.resources.I18n;
@@ -98,6 +99,7 @@ public class Main {
 
         // ===== STEP 6: Overrides copy =====
         copyOverrides();
+        copyLocalizedOverrides();
         LogHelper.appendToLog(Level.INFO, "", true); // Adds an empty line to the log file, to make it more readable.
 
         // ===== STEP 7: Carryover copy =====
@@ -157,8 +159,10 @@ public class Main {
 
         Config.createConfigFile();
 
-        // Deletes the empty files in the mods folder
+        // Deletes the empty files in the mods folder, prior to an installation
         String[] list = FileHelper.listDirectory("mods", true);
+        LogHelper.verboseInfo("Detecting files scheduled for deletion");
+
         for (String s : list) {
             long size = -1;
             try {
@@ -166,9 +170,17 @@ public class Main {
             }
             catch (Exception ignore) {}
 
-            if (size == 0) FileHelper.delete("mods" + File.separator + s);
-        }
+            //Ignore folders
+            if (FileHelper.isDirectory("mods" + File.separator + s))
+                continue;
 
+            LogHelper.verboseInfo("name: " + s + " | size: " + size);
+
+            if (size == 0) {
+                LogHelper.verboseInfo("Deleting file " + s);
+                FileHelper.delete("mods" + File.separator + s);
+            }
+        }
         // If the carryover folder doesn't exist, it creates it with empty mods and config folders inside.
         if (!FileHelper.exists("carryover")) {
             LogHelper.info("The carryover folder didn't exist, created a blank one.");
@@ -193,11 +205,24 @@ public class Main {
             // The pack directory
             FileHelper.createDirectory(path);
 
-            // The overrides directory
+            // The main overrides directory
             FileHelper.createDirectory(path + File.separator + "overrides");
-            FileHelper.overwriteFile(path + File.separator + "overrides" + File.separator + "example.txt", new String[]{"Example file that would be at root.", "Created my MCInstance Loader."});
+            FileHelper.overwriteFile(path + File.separator + "overrides" + File.separator + "example.txt", new String[]{"Example file that would be at root. Applies to both client-side and server-side.", "Created my MCInstance Loader."});
             FileHelper.createDirectory(path + File.separator + "overrides" + File.separator + "mods");
-            FileHelper.overwriteFile(path + File.separator + "overrides" + File.separator + "mods" + File.separator + "example2.txt", new String[]{"Example file that would be in the mods folder.", "Created by MCInstance Loader."});
+            FileHelper.overwriteFile(path + File.separator + "overrides" + File.separator + "mods" + File.separator + "example2.txt", new String[]{"Example file that would be in the mods folder. Applies to both client-side and server-side.", "Created by MCInstance Loader."});
+
+            // The client overrides directory
+            FileHelper.createDirectory(path + File.separator + "client-overrides");
+            FileHelper.overwriteFile(path + File.separator + "client-overrides" + File.separator + "example.txt", new String[]{"Example file that would be at root. Client-side only", "Created my MCInstance Loader."});
+            FileHelper.createDirectory(path + File.separator + "client-overrides" + File.separator + "mods");
+            FileHelper.overwriteFile(path + File.separator + "client-overrides" + File.separator + "mods" + File.separator + "example2.txt", new String[]{"Example file that would be in the mods folder. Client-side only", "Created by MCInstance Loader."});
+
+            // The server overrides directory
+            FileHelper.createDirectory(path + File.separator + "server-overrides");
+            FileHelper.overwriteFile(path + File.separator + "server-overrides" + File.separator + "example.txt", new String[]{"Example file that would be at root. Server-side only", "Created my MCInstance Loader."});
+            FileHelper.createDirectory(path + File.separator + "server-overrides" + File.separator + "mods");
+            FileHelper.overwriteFile(path + File.separator + "server-overrides" + File.separator + "mods" + File.separator + "example2.txt", new String[]{"Example file that would be in the mods folder. Server-side only", "Created by MCInstance Loader."});
+
 
             // The metadata.packconfig file.
             FileHelper.overwriteFile(path + File.separator + "metadata.packconfig", new String[]{
@@ -410,6 +435,7 @@ public class Main {
 
             // Creates the forge progressbar for the current step, so it can be displayed on the loading screen.
             ProgressManager.ProgressBar progress = ProgressManager.push("MCInstance: Downloading resource", list.length, true);
+            int progressCount = 0;
 
             // Grabs the current list of blacklisted sites from StopModReposts.
             if (!Config.disableStopModRepostsCheck) {
@@ -427,7 +453,13 @@ public class Main {
                 LogHelper.appendToLog(Level.INFO, "==================================================", true);
                 object.appendToLog();
 
-                LogHelper.verboseInfo("Attempting to download the resource " + object.name + "...");
+                progressCount++;
+
+                if (!Config.verboseMode && side.equals("server")) {
+                    LogHelper.info("Downloading " + object.name + "... (" + progressCount + "/" + list.length + " resources)");
+                }
+
+                LogHelper.verboseInfo("Attempting to download the resource " + object.name + "... (" + progressCount + "/" + list.length + " resources)");
 
                 if (object.downloadFile()) {
                     if (!object.checkHash()) throwError("Could not verify the hash of " + object.name + ".");
@@ -474,6 +506,38 @@ public class Main {
 
                 // Tries to move (merge) the file, if it fails it throws an error.
                 if (!FileHelper.copy(Config.configFolder + "temp" + File.separator + "overrides" + File.separator + s, s)) throwError("Error while merging the file " + s + " from the overrides folder.");
+
+                errorContext = ""; // Resets the errorContext, so it can be reused for the next resource or the next step.
+            }
+
+            ProgressManager.pop(progress); // Deletes the progressbar, as it doesn't need to be shown anymore (all files have been done).
+        }
+    }
+
+    public static void copyLocalizedOverrides() {
+        // Overrides copy: Replaces the minecraft files with the ones in the localized overrides folder.
+        String overrideType = (side.equals("client")) ? "client-overrides" : "server-overrides";
+
+        String path = Config.configFolder + "temp" + File.separator + overrideType;
+
+        // If there wasn't any error that occured on the previous steps.
+        if (!hasErrorOccured && !hasUpdate && FileHelper.exists(path) && FileHelper.isDirectory(path)) {
+            LogHelper.info("Moving the files from the " + overrideType + " folder.");
+
+            // Creates the recursive file list, to merge from.
+            String[] fileList = FileHelper.listDirectory(Config.configFolder + "temp" + File.separator + overrideType, true);
+
+            // Creates the forge progressbar for the current step, so it can be displayed on the loading screen.
+            ProgressManager.ProgressBar progress = ProgressManager.push("MCInstance: Merging " + overrideType + " folder", fileList.length, true);
+
+            // For every file/folder in the localized overrides folder, we move them to the root .minecraft folder.
+            for (String s : fileList) {
+                progress.step(s);
+
+                LogHelper.verboseInfo("Merging " + s + " with the original folder.");
+
+                // Tries to move (merge) the file, if it fails it throws an error.
+                if (!FileHelper.copy(Config.configFolder + "temp" + File.separator + overrideType + File.separator + s, s)) throwError("Error while merging the file " + s + " from the " + overrideType + " folder.");
 
                 errorContext = ""; // Resets the errorContext, so it can be reused for the next resource or the next step.
             }
@@ -551,7 +615,11 @@ public class Main {
 
         LogHelper.error(text); // Adds the error to the general game log and the mod log.
 
-        if (side.equals("server")) return;
+        if (side.equals("server")) {
+            LogHelper.info("Failed to install the mcinstance file!");
+            MinecraftServer.getServer().initiateShutdown();
+            return;
+        };
 
         text = "- " + text; // Formats the text to look like an error list.
 
@@ -575,6 +643,9 @@ public class Main {
 
         if (side.equals("server")) {
             LogHelper.info("Succesfully installed the mcinstance file!");
+            LogHelper.info("The server will soon restart to apply its changes.");
+
+            MinecraftServer.getServer().initiateShutdown();
             return;
         }
 
