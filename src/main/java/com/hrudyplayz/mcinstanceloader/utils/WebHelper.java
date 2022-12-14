@@ -78,6 +78,7 @@ public class WebHelper {
             }
             else {
                 Main.errorContext = "There was an issue writing to file.";
+                e.printStackTrace();
                 return false;
             }
         }

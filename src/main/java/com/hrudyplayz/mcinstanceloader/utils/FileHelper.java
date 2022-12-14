@@ -124,7 +124,6 @@ public class FileHelper {
             return true;
         }
         catch (IOException e) {
-            e.printStackTrace();
             if (!doneIOException) {
                 LogHelper.info("An error occured while creating the file, trying again...");
                 try {
@@ -134,7 +133,9 @@ public class FileHelper {
 
                 return createFile(path, true);
             }
-            else return false;
+
+            e.printStackTrace();
+            return false;
         }
     }
 
@@ -162,7 +163,6 @@ public class FileHelper {
             return true;
         }
         catch (IOException e) {
-            e.printStackTrace();
             if (!doneIOException) {
                 LogHelper.info("An error occured while changing the file, trying again...");
                 try {
@@ -172,7 +172,9 @@ public class FileHelper {
 
                 return appendFile(path, lines, true);
             }
-            else return false;
+
+            e.printStackTrace();
+            return false;
         }
     }
 
@@ -200,7 +202,6 @@ public class FileHelper {
         }
 
         catch (IOException e) {
-            e.printStackTrace();
             if (!doneIOException) {
                 LogHelper.info("An error occured while overwriting the file, trying again...");
                 try {
@@ -210,7 +211,9 @@ public class FileHelper {
 
                 return overwriteFile(path, lines, true);
             }
-            else return false;
+
+            e.printStackTrace();
+            return false;
         }
     }
 
@@ -238,7 +241,6 @@ public class FileHelper {
         }
 
         catch (IOException e) {
-            e.printStackTrace();
             if (!doneIOException) {
                 LogHelper.info("An error occured while reading the file, trying again...");
                 try {
@@ -248,7 +250,9 @@ public class FileHelper {
 
                 return listLines(path, true);
             }
-            else return new String[0];
+
+            e.printStackTrace();
+            return new String[0];
         }
     }
 
@@ -323,7 +327,6 @@ public class FileHelper {
         }
 
         catch (IOException e) {
-            e.printStackTrace();
             if (!doneIOException) {
                 LogHelper.info("An error occured while copying the file, trying again...");
                 try {
@@ -333,7 +336,9 @@ public class FileHelper {
 
                 return copy(source, target, true);
             }
-            else return false;
+
+            e.printStackTrace();
+            return false;
         }
     }
 
@@ -380,7 +385,6 @@ public class FileHelper {
         }
 
         catch (IOException e) {
-            e.printStackTrace();
             if (!doneIOException) {
                 LogHelper.info("An error occured while deleting the file, trying again...");
                 try {
@@ -390,7 +394,9 @@ public class FileHelper {
 
                 return delete(path, true);
             }
-            else return false;
+
+            e.printStackTrace();
+            return false;
         }
     }
 

@@ -515,7 +515,8 @@ public class Main {
     }
 
     public static void copyLocalizedOverrides() {
-        // Overrides copy: Replaces the minecraft files with the ones in the localized overrides folder.
+    // Sided overrides copy: Replaces the minecraft files with the ones in the sided overrides folder.
+
         String overrideType = (side.equals("client")) ? "client-overrides" : "server-overrides";
 
         String path = Config.configFolder + "temp" + File.separator + overrideType;
