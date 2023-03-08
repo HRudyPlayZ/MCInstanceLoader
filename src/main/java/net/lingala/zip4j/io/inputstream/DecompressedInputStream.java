@@ -6,10 +6,10 @@ import java.io.PushbackInputStream;
 
 abstract class DecompressedInputStream extends InputStream {
 
-  private CipherInputStream cipherInputStream;
+  private CipherInputStream<?> cipherInputStream;
   protected byte[] oneByteBuffer = new byte[1];
 
-  public DecompressedInputStream(CipherInputStream cipherInputStream) {
+  public DecompressedInputStream(CipherInputStream<?> cipherInputStream) {
     this.cipherInputStream = cipherInputStream;
   }
 
@@ -39,12 +39,13 @@ abstract class DecompressedInputStream extends InputStream {
     cipherInputStream.close();
   }
 
-  public void endOfEntryReached(InputStream inputStream) throws IOException {
-    cipherInputStream.endOfEntryReached(inputStream);
+  public void endOfEntryReached(InputStream inputStream, int numberOfBytesPushedBack) throws IOException {
+    cipherInputStream.endOfEntryReached(inputStream, numberOfBytesPushedBack);
   }
 
-  public void pushBackInputStreamIfNecessary(PushbackInputStream pushbackInputStream) throws IOException {
+  public int pushBackInputStreamIfNecessary(PushbackInputStream pushbackInputStream) throws IOException {
     // Do nothing by default
+    return 0;
   }
 
   protected byte[] getLastReadRawDataCache() {

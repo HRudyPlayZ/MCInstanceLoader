@@ -58,7 +58,6 @@ public class FileHelper {
         return false; // If nothing weird was found, then i guess it is valid.
     }
 
-
     /**
     Creates a new directory at the specified path.
     If the directory already exists, it doesn't do anything and succeeds.

@@ -23,7 +23,6 @@ public class Config {
     public static String curseforgeURL;
     public static String curseforgeAPIKey;
 
-    public static String[] mainMenuClassPaths;
     public static int closeGameTimer;
     public static int amountOfDisplayedErrors;
     public static String[] successMessage;
@@ -59,7 +58,6 @@ public class Config {
 
         curseforgeAPIKey = config.getString("CFCore API key", CATEGORY_BEHAVIOR, "", "The API key to use if you use the official Curseforge API.");
 
-        mainMenuClassPaths = config.getStringList("Menu class paths", CATEGORY_GUI, new String[]{"net.minecraft.client.gui.GuiMainMenu"}, "List of Java class paths for menus that will get interrupted by this mod's GUI. May be useful for mods that change the main menu.");
         closeGameTimer = config.getInt("Close game timer",CATEGORY_GUI, 10, 0, Integer.MAX_VALUE, "Delay before automatically closing the game on the success/fail screen. Set to 0 to disable.");
         amountOfDisplayedErrors = config.getInt("Maximum amount of displayed errors", CATEGORY_GUI, 5, 0, 64, "Maximum number of errors that can be displayed on the error screen at once.");
         successMessage = config.getStringList("Success message", CATEGORY_GUI, new String[]{"The modpack succcesfully installed.", "In order to see the applied changes, please restart your game."}, "Sentence displayed to the player after the pack finishes installing.");

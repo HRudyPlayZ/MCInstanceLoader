@@ -222,7 +222,7 @@ public class FileUtils {
           String rootPath = new File(fileToAdd.getParentFile().getCanonicalFile().getPath() + File.separator + fileToAdd.getCanonicalFile().getName()).getPath();
           tmpFileName = rootPath.substring(rootFolderFileRef.length());
         } else {
-          if (!fileCanonicalPath.startsWith(rootFolderFileRef)) {
+          if (!fileToAdd.getCanonicalFile().getPath().startsWith(rootFolderFileRef)) {
             tmpFileName = fileToAdd.getCanonicalFile().getParentFile().getName() + FILE_SEPARATOR + fileToAdd.getCanonicalFile().getName();
           } else {
             tmpFileName = fileCanonicalPath.substring(rootFolderFileRef.length());
@@ -469,11 +469,11 @@ public class FileUtils {
 
     DosFileAttributeView fileAttributeView = Files.getFileAttributeView(file, DosFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
 
-    //IntelliJ complains that fileAttributes can never be null. But apparently it can.
+    //IntelliJ complains that fileAttributeView can never be null. But apparently it can.
     //See https://github.com/srikanth-lingala/zip4j/issues/435
     //Even the javadoc of Files.getFileAttributeView says it can be null
     //noinspection ConstantConditions
-    if (fileAttributes == null) {
+    if (fileAttributeView == null) {
       return;
     }
 
@@ -558,9 +558,17 @@ public class FileUtils {
           LinkOption.NOFOLLOW_LINKS);
       Set<PosixFilePermission> posixFilePermissions = posixFileAttributeView.readAttributes().permissions();
 
-      fileAttributes[3] = setBitIfApplicable(Files.isRegularFile(file), fileAttributes[3], 7);
-      fileAttributes[3] = setBitIfApplicable(Files.isDirectory(file), fileAttributes[3], 6);
-      fileAttributes[3] = setBitIfApplicable(Files.isSymbolicLink(file), fileAttributes[3], 5);
+      boolean isSymlink = Files.isSymbolicLink(file);
+      if (isSymlink) {
+        // Mark as a regular file and not a directory if file is a symlink and even if the symlink points to a directory
+        fileAttributes[3] = BitUtils.setBit(fileAttributes[3], 7);
+        fileAttributes[3] = BitUtils.unsetBit(fileAttributes[3], 6);
+      } else {
+        fileAttributes[3] = setBitIfApplicable(Files.isRegularFile(file), fileAttributes[3], 7);
+        fileAttributes[3] = setBitIfApplicable(Files.isDirectory(file), fileAttributes[3], 6);
+      }
+
+      fileAttributes[3] = setBitIfApplicable(isSymlink, fileAttributes[3], 5);
       fileAttributes[3] = setBitIfApplicable(posixFilePermissions.contains(OWNER_READ), fileAttributes[3], 0);
       fileAttributes[2] = setBitIfApplicable(posixFilePermissions.contains(OWNER_WRITE), fileAttributes[2], 7);
       fileAttributes[2] = setBitIfApplicable(posixFilePermissions.contains(OWNER_EXECUTE), fileAttributes[2], 6);

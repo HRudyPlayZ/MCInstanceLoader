@@ -16,8 +16,6 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.MinecraftForge;
 
 import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.common.ProgressManager;
@@ -33,7 +31,6 @@ import com.hrudyplayz.mcinstanceloader.gui.InfoGui;
 
 
 @SuppressWarnings("unused")
-@Mod(modid = ModProperties.MODID, name = ModProperties.NAME, version = ModProperties.VERSION)
 public class Main {
 // This class defines the main mod class, and registers stuff like Events.
 
@@ -53,24 +50,6 @@ public class Main {
     public static String side; // Currently running side of the game, either "client" or "server".
 
     public static String[] blacklist; // List of strings that is later used to store the StopModReposts list.
-
-    @EventHandler
-    public void preInit(FMLPreInitializationEvent event) {
-    // The preInit event, that gets called as soon as possible in Forge's loading. Basically the entire mod.
-    // First phrase of the mod, gets ran at the game launch.
-
-        // ===== STEP 0: The mod's initialisation. =====
-        initMod(event);
-
-        // ===== STEP 1: Cleanup phase =====
-        cleanupFiles();
-        LogHelper.appendToLog(Level.INFO, "", true); // Adds an empty line to the log file, to make it more readable.
-
-        // ===== STEP 2: Check for updates =====
-        updateChecker();
-
-        secondPhase();
-    }
 
     public static void secondPhase() {
     // Second phase of the mod, used for the continue option in the update GUI.
@@ -151,7 +130,7 @@ public class Main {
         // Registers the GuiOpenEventHandler when on client side, and sets the variable to easily check which side is running.
         if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
             side = "client";
-            MinecraftForge.EVENT_BUS.register(GuiOpenEventHandler.instance);
+            MinecraftForge.EVENT_BUS.register(GuiOpenEventHandler.INSTANCE);
         }
         else side = "server";
 

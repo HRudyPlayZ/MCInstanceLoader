@@ -4,9 +4,7 @@ import net.lingala.zip4j.crypto.AESDecrypter;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.AESExtraDataRecord;
 import net.lingala.zip4j.model.LocalFileHeader;
-import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.util.InternalZipConstants;
-import net.lingala.zip4j.util.Zip4jUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -119,22 +117,12 @@ class AesCipherInputStream extends CipherInputStream<AESDecrypter> {
   }
 
   @Override
-  protected void endOfEntryReached(InputStream inputStream) throws IOException {
-    verifyContent(readStoredMac(inputStream));
+  protected void endOfEntryReached(InputStream inputStream, int numberOfBytesPushedBack) throws IOException {
+    verifyContent(readStoredMac(inputStream), numberOfBytesPushedBack);
   }
 
-  private void verifyContent(byte[] storedMac) throws IOException {
-    if (getLocalFileHeader().isDataDescriptorExists()
-        && CompressionMethod.DEFLATE.equals(Zip4jUtil.getCompressionMethod(getLocalFileHeader()))) {
-      // Skip content verification in case of Deflate compression and if data descriptor exists.
-      // In this case, we do not know the exact size of compressed data before hand and it is possible that we read
-      // and pass more than required data into inflater, thereby corrupting the aes mac bytes.
-      // See usage of PushBackInputStream in the project for how this push back of data is done
-      // Unfortunately, in this case we cannot perform a content verification and have to skip
-      return;
-    }
-
-    byte[] calculatedMac = getDecrypter().getCalculatedAuthenticationBytes();
+  private void verifyContent(byte[] storedMac, int numberOfBytesPushedBack) throws IOException {
+    byte[] calculatedMac = getDecrypter().getCalculatedAuthenticationBytes(numberOfBytesPushedBack);
     byte[] first10BytesOfCalculatedMac = new byte[AES_AUTH_LENGTH];
     System.arraycopy(calculatedMac, 0, first10BytesOfCalculatedMac, 0, InternalZipConstants.AES_AUTH_LENGTH);
 
