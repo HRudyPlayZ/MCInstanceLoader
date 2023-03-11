@@ -45,7 +45,13 @@ public class WebHelper {
         }
 
         try {
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            HttpURLConnection connection;
+            if (Config.useHttpProxy) {
+                Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(Config.proxyHttpHost, Config.proxyHttpPort));
+                connection = (HttpURLConnection) url.openConnection(proxy);
+            } else {
+                connection = (HttpURLConnection) url.openConnection();
+            }
             connection.setRequestMethod("GET");
             connection.setInstanceFollowRedirects(true);
             
