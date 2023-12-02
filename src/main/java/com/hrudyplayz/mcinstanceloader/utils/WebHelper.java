@@ -5,20 +5,16 @@ import java.io.IOException;
 import java.net.*;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import javax.net.ssl.*;
 import org.apache.commons.io.FileUtils;
 
 import com.hrudyplayz.mcinstanceloader.Config;
 import com.hrudyplayz.mcinstanceloader.Main;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 /**
 An helper class to download files from the internet.
@@ -32,7 +28,7 @@ public class WebHelper {
     public static String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) twitch-desktop-electron-platform/1.0.0 Chrome/73.0.3683.121 Electron/5.0.12 Safari/537.36 desklight/8.51.0";
     public static String REFERER = "https://www.google.com";
 
-    public static Boolean checkSSLCertificates = true;
+    private static final SSLSocketFactory DEFAULT_HTTPS_CERTIFICATES = HttpsURLConnection.getDefaultSSLSocketFactory();
 
     /**
     Downloads a specific file from an internet address and saves it to a given location.
@@ -42,10 +38,13 @@ public class WebHelper {
     @return Whether the operation succeeded or not.
     */
     public static boolean downloadFile(String fileURL, String savePath) {
-        return downloadFile(fileURL, savePath, false);
+        return downloadFile(fileURL, savePath, 0);
     }
+    private static boolean downloadFile(String fileURL, String savePath, int retryCount) {
+        // Resets the SSL certificate ignore status, for the upcoming HttpURLConnection
+        if (retryCount == 0) toggleHTTPSCertificateChecks(true);
 
-    private static boolean downloadFile(String fileURL, String savePath, boolean doneIOException) {
+        // URL Object used for the URLConnection
         URL url;
         try {
             url = new URL(fileURL);
@@ -56,53 +55,85 @@ public class WebHelper {
         }
 
         try {
+            // URLConnection object
             HttpURLConnection connection;
-            if (Config.useHttpProxy) {
-                Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(Config.proxyHttpHost, Config.proxyHttpPort));
+            if (!Config.httpProxyHost.isEmpty()) {
+                Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(Config.httpProxyHost, Config.httpProxyPort));
                 connection = (HttpURLConnection) url.openConnection(proxy);
-            } else {
-                connection = (HttpURLConnection) url.openConnection();
             }
+            else connection = (HttpURLConnection) url.openConnection();
+
+            // GET Method that follows redirects
             connection.setRequestMethod("GET");
             connection.setInstanceFollowRedirects(true);
-            
+
+            // Timeouts
             connection.setReadTimeout(Config.connectionTimeout * 1000);
             connection.setConnectTimeout(Config.connectionTimeout * 1000);
 
+            // Request properties
             connection.setRequestProperty("User-Agent", USER_AGENT);
             connection.setRequestProperty("Referer", REFERER);
-            if (Config.curseforgeAPIKey.length() > 0) connection.setRequestProperty("x-api-key", Config.curseforgeAPIKey);
 
+            if (!Config.curseforgeAPIKey.isEmpty()) connection.setRequestProperty("x-api-key", Config.curseforgeAPIKey);
+
+            // If the response didn't an HTTP 200 (OK) response code, it failed.
             int responseCode = connection.getResponseCode();
             if (responseCode != HttpURLConnection.HTTP_OK) {
-                Main.errorContext = "Received an HTTP " + responseCode + " error.";
-                return false;
+                if (retryCount < Config.maxAmountOfDownloadRetries) {
+                    LogHelper.info("The website returned an HTTP " + responseCode + " error status, trying again...");
+
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(1000);
+                    }
+                    catch (InterruptedException ignore) {}
+
+                    return downloadFile(fileURL, savePath, retryCount + 1);
+                }
+                else {
+                    Main.errorContext = "Received an HTTP " + responseCode + " error.";
+                    return false;
+                }
             }
 
             File file = new File(savePath);
             FileUtils.copyInputStreamToFile(connection.getInputStream(), file);
-            file.canRead();
-            if (doneIOException)
-                LogHelper.info("Successfully downloaded file on the second attempt.");
+
+            LogHelper.info("Successfully downloaded the file on attempt number " + (retryCount + 1) + ".");
+
             return true;
         }
-        catch (IOException e) {
-            if (!doneIOException) {
-                LogHelper.info("An error occurred while downloading the file, trying again...");
+        catch (SSLException e) {
+            if (Config.allowHTTPSCertificateCheckBypass && retryCount < Config.maxAmountOfDownloadRetries) {
+                LogHelper.info("An error occurred while checking the HTTPS certificate of the address, disabling the certificate check and trying again...");
+
+                toggleHTTPSCertificateChecks(false);
+
                 try {
                     TimeUnit.MILLISECONDS.sleep(1000);
                 }
                 catch (InterruptedException ignore) {}
 
-                if (Config.allowSSLCertificateBypass && checkSSLCertificates) {
-                    LogHelper.info("Attempting to resolve issues by bypassing SSL certificates.");
-                    disableSSLCertificateChecking();
-                }
-
-                return downloadFile(fileURL, savePath, true);
+                return downloadFile(fileURL, savePath, retryCount + 1);
             }
             else {
+                Main.errorContext = "There was an issue writing to file.";
+                e.printStackTrace();
+                return false;
+            }
+        }
+        catch (IOException e) {
+            if (retryCount < Config.maxAmountOfDownloadRetries) {
+                LogHelper.info("An error occurred while downloading the file, trying again...");
 
+                try {
+                    TimeUnit.MILLISECONDS.sleep(1000);
+                }
+                catch (InterruptedException ignore) {}
+
+                return downloadFile(fileURL, savePath, retryCount + 1);
+            }
+            else {
                 Main.errorContext = "There was an issue writing to file.";
                 e.printStackTrace();
                 return false;
@@ -123,9 +154,6 @@ public class WebHelper {
     @return Whether the operation succeeded or not.
     */
     public static boolean downloadFile(String fileURL, String savePath, String[] follows) {
-    // Lets you download a file from a specific URL and save it to a location.
-    // Will follow any button with a text present in the follows list.
-
         int counter = 0;
         while (counter < follows.length) {
             if (!downloadFile(fileURL, Config.configFolder + "temp" + File.separator + "page.html")) {
@@ -167,36 +195,38 @@ public class WebHelper {
         return downloadFile(fileURL, savePath);
     }
 
+
     /**
-     * Disables the SSL certificate checking for new instances of {@link HttpsURLConnection} This has been created to
-     * aid testing on a local box, not for use on production.
-     */
-    private static void disableSSLCertificateChecking() {
-        TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
-            public X509Certificate[] getAcceptedIssuers() {
-                return null;
+     Enables or disables the TLS/SSL certificate checks of future {@link HttpURLConnection} instances
+
+     @param enableChecks Whether to enable or disable the TLS/SSL certificate checks
+    */
+    private static void toggleHTTPSCertificateChecks(boolean enableChecks) {
+        if (enableChecks) HttpsURLConnection.setDefaultSSLSocketFactory(DEFAULT_HTTPS_CERTIFICATES);
+        else {
+            TrustManager[] trustAllCerts = new TrustManager[]{
+                    new X509TrustManager() {
+                        public X509Certificate[] getAcceptedIssuers() {
+                            return null;
+                        }
+
+                        @Override
+                        public void checkClientTrusted(X509Certificate[] arg0, String arg1) {}
+
+                        @Override
+                        public void checkServerTrusted(X509Certificate[] arg0, String arg1) {}
+                    }
+            };
+
+            try {
+                SSLContext context = SSLContext.getInstance("TLS");
+
+                context.init(null, trustAllCerts, new java.security.SecureRandom());
+                HttpsURLConnection.setDefaultSSLSocketFactory(context.getSocketFactory());
             }
-
-            @Override
-            public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-                // Not implemented
+            catch (KeyManagementException | NoSuchAlgorithmException e) {
+                e.printStackTrace();
             }
-
-            @Override
-            public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-                // Not implemented
-            }
-        } };
-
-        try {
-            SSLContext sc = SSLContext.getInstance("TLS");
-
-            sc.init(null, trustAllCerts, new java.security.SecureRandom());
-
-            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-        } catch (KeyManagementException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
         }
-        checkSSLCertificates = false;
     }
 }

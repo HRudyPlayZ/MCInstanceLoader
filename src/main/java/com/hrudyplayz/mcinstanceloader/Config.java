@@ -6,6 +6,7 @@ import net.minecraftforge.common.config.Configuration;
 
 import com.hrudyplayz.mcinstanceloader.utils.LogHelper;
 
+
 public class Config {
 // This class will handle every setting and config the user can set to change the mod's behavior.
 
@@ -19,9 +20,10 @@ public class Config {
     public static boolean disableCache;
     public static boolean disableAutomaticZipCreation;
     public static int connectionTimeout;
-    public static boolean useHttpProxy;
-    public static String proxyHttpHost;
-    public static int proxyHttpPort;
+    public static String httpProxyHost;
+    public static int httpProxyPort;
+    public static boolean allowHTTPSCertificateCheckBypass;
+    public static int maxAmountOfDownloadRetries;
 
     public static String curseforgeURL;
     public static String curseforgeAPIKey;
@@ -29,7 +31,6 @@ public class Config {
     public static int closeGameTimer;
     public static int amountOfDisplayedErrors;
     public static String[] successMessage;
-    public static boolean allowSSLCertificateBypass;
 
     public static String CATEGORY_BEHAVIOR = "Behavior";
     public static String CATEGORY_GUI = "GUI";
@@ -50,12 +51,12 @@ public class Config {
         skipFileDisabling = config.getBoolean("Skip file disabling", CATEGORY_BEHAVIOR, false, "Whether to skip the step that disables the pack.mcinstance file and deletes the temp folder. Useful for pack devs.");
         deleteInsteadOfRenaming = config.getBoolean("Delete MCInstance directly", CATEGORY_BEHAVIOR, false, "Wheter to delete the pack.mcinstance file instead of renaming it.");
         disableStopModRepostsCheck = config.getBoolean("Disable StopModReposts check", CATEGORY_BEHAVIOR, false, "Whether to disable the StopModReposts check, used to prevent the use of malware sites. It's recommended to keep it enabled.");
-        allowSSLCertificateBypass = config.getBoolean("Allow SSL Certificate bypass", CATEGORY_BEHAVIOR, false, "Whether to allow the bypass of SSL Certificates if this cause problems. This may fix download issues in some launchers.");
         disableCache = config.getBoolean("Disable the cache system", CATEGORY_BEHAVIOR, false, "Whether to disable the cache system, forcing every resource to be downloaded regardless of the cached value.");
 
-        useHttpProxy = config.getBoolean("Use proxy", CATEGORY_BEHAVIOR, false, "This will enable proxy when downing files.");
-        proxyHttpHost = config.getString("Proxy host address", CATEGORY_BEHAVIOR, "127.0.0.1", "The proxy host address.");
-        proxyHttpPort = config.getInt("Proxy host port", CATEGORY_BEHAVIOR, 0, 0, 65535, "The proxy host port.");
+        httpProxyHost = config.getString("Web connection proxy host", CATEGORY_BEHAVIOR, "", "The HTTP proxy ip address, use this if you use a VPN/Proxy. If you don't know what this is or don't want to use a proxy just leave it blank.");
+        httpProxyPort = config.getInt("Web connection proxy port", CATEGORY_BEHAVIOR, 8080, 0, 65535, "The internet port to use, if using an HTTP proxy.");
+        allowHTTPSCertificateCheckBypass = config.getBoolean("Allow HTTPS certificate check bypass", CATEGORY_BEHAVIOR, false, "Whether to allow to bypass the certificate check for HTTPS requests and allow invalid certificates. Required for certain launchers to work properly on some links but can represent a security risk. Only use if necessary.");
+        maxAmountOfDownloadRetries = config.getInt("Maximum amount of download retries", CATEGORY_BEHAVIOR, 2, 0, 99, "The maximum amount of times to attempt to retry a failed download.");
 
         disableAutomaticZipCreation = config.getBoolean("Disable the automatic zipping system for the pack folder", CATEGORY_BEHAVIOR, false, "Whether to disable the automatic creation of the pack.mcinstance file from the pack folder.");
         if (deleteInsteadOfRenaming && !disableAutomaticZipCreation) disableAutomaticZipCreation = true;
@@ -63,7 +64,7 @@ public class Config {
         connectionTimeout = config.getInt("Web connection timeout", CATEGORY_BEHAVIOR, 100, 0, Integer.MAX_VALUE, "The amount of seconds the mod will wait to receive a response for downloads. Zero for no timeout at all (not recommended).");
 
         curseforgeURL = config.getString("CFCore proxy URL", CATEGORY_BEHAVIOR, "http://api-pocket.com/", "The URL to use for the CFCore API. Any proxy works. Leave blank to use the official CFCore one. Defaults to a simple proxy.");
-        if (curseforgeURL.trim().length() == 0) curseforgeURL = "https://api.curseforge.com/";
+        if (curseforgeURL.trim().isEmpty()) curseforgeURL = "https://api.curseforge.com/";
 
         curseforgeAPIKey = config.getString("CFCore API key", CATEGORY_BEHAVIOR, "", "The API key to use if you use the official Curseforge API.");
 

@@ -295,7 +295,7 @@ public class ResourceObject {
                     url = splitted[1];
                     url = url.substring(0, url.indexOf("\""));
                 }
-                if (url.length() >= 1) this.url = url;
+                if (!url.isEmpty()) this.url = url;
             }
 
             // Source file name
@@ -306,7 +306,7 @@ public class ResourceObject {
                     fileName = splitted[1];
                     fileName = fileName.substring(0, fileName.indexOf("\""));
                 }
-                if (fileName.length() >= 1) this.sourceFileName = fileName;
+                if (!fileName.isEmpty()) this.sourceFileName = fileName;
             }
 
             // SHA1 hash
@@ -316,7 +316,7 @@ public class ResourceObject {
                 if (splitted.length >= 2) {
                     sha1 = splitted[0].substring(splitted[0].lastIndexOf("\"") + 1);
                 }
-                if (sha1.length() >= 1) this.SHA1 = sha1;
+                if (!sha1.isEmpty()) this.SHA1 = sha1;
             }
 
             // MD5 hash
@@ -326,10 +326,10 @@ public class ResourceObject {
                 if (splitted.length >= 2) {
                     md5 = splitted[0].substring(splitted[0].lastIndexOf("\"") + 1);
                 }
-                if (md5.length() >= 1) this.MD5 = md5;
+                if (!md5.isEmpty()) this.MD5 = md5;
             }
 
-            return this.url.length() > 0 || this.sourceFileName != null;
+            return !this.url.isEmpty() || this.sourceFileName != null;
         }
 
         return false;
@@ -359,7 +359,7 @@ public class ResourceObject {
                         break;
                     }
                 }
-                if (file.length() < 1) return false;
+                if (file.isEmpty()) return false;
 
                 String[] splitted;
 
@@ -371,7 +371,7 @@ public class ResourceObject {
                         url = splitted[1];
                         url = url.substring(0, url.indexOf("\""));
                     }
-                    if (url.length() >= 1) this.url = url;
+                    if (!url.isEmpty()) this.url = url;
                 }
 
                 // SHA1 hash
@@ -382,7 +382,7 @@ public class ResourceObject {
                         sha1 = splitted[1];
                         sha1 = sha1.substring(0, sha1.indexOf("\""));
                     }
-                    if (sha1.length() >= 1) this.SHA1 = sha1;
+                    if (!sha1.isEmpty()) this.SHA1 = sha1;
                 }
 
                 // SHA512 hash
@@ -393,10 +393,10 @@ public class ResourceObject {
                         sha512 = splitted[1];
                         sha512 = sha512.substring(0, sha512.indexOf("\""));
                     }
-                    if (sha512.length() >= 1) this.SHA512 = sha512;
+                    if (!sha512.isEmpty()) this.SHA512 = sha512;
                 }
 
-                return this.url.length() > 0;
+                return !this.url.isEmpty();
             }
         }
 
@@ -464,7 +464,7 @@ public class ResourceObject {
         // If it didn't download it from before (so either it's not of curseforge type, the resource didn't have a sourceFileName specified, or the direct download failed),
         // it will download it here. Anything other than the curseforge or modrinth type will directly go here.
 
-        if (this.follows.length <= 0) return WebHelper.downloadFile(this.url, this.destination);
+        if (this.follows.length == 0) return WebHelper.downloadFile(this.url, this.destination);
         else return WebHelper.downloadFile(this.url, this.destination, this.follows);
     }
 

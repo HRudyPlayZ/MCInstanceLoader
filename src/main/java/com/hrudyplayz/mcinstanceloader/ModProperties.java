@@ -10,7 +10,7 @@ public class ModProperties {
     // General values
     public static final String MODID = "mcinstanceloader";
     public static final String NAME = "MCInstance Loader";
-    public static final String VERSION = "2.6";
+    public static final String VERSION = "2.7";
     public static final String MC_VERSION = "1.7.10";
     public static final String URL = "https://github.com/HRudyPlayZ/MCInstanceLoader/";
 
