@@ -29,6 +29,7 @@ public class Config {
     public static int closeGameTimer;
     public static int amountOfDisplayedErrors;
     public static String[] successMessage;
+    public static boolean allowSSLCertificateBypass;
 
     public static String CATEGORY_BEHAVIOR = "Behavior";
     public static String CATEGORY_GUI = "GUI";
@@ -49,6 +50,7 @@ public class Config {
         skipFileDisabling = config.getBoolean("Skip file disabling", CATEGORY_BEHAVIOR, false, "Whether to skip the step that disables the pack.mcinstance file and deletes the temp folder. Useful for pack devs.");
         deleteInsteadOfRenaming = config.getBoolean("Delete MCInstance directly", CATEGORY_BEHAVIOR, false, "Wheter to delete the pack.mcinstance file instead of renaming it.");
         disableStopModRepostsCheck = config.getBoolean("Disable StopModReposts check", CATEGORY_BEHAVIOR, false, "Whether to disable the StopModReposts check, used to prevent the use of malware sites. It's recommended to keep it enabled.");
+        allowSSLCertificateBypass = config.getBoolean("Allow SSL Certificate bypass", CATEGORY_BEHAVIOR, false, "Whether to allow the bypass of SSL Certificates if this cause problems. This may fix download issues in some launchers.");
         disableCache = config.getBoolean("Disable the cache system", CATEGORY_BEHAVIOR, false, "Whether to disable the cache system, forcing every resource to be downloaded regardless of the cached value.");
 
         useHttpProxy = config.getBoolean("Use proxy", CATEGORY_BEHAVIOR, false, "This will enable proxy when downing files.");
