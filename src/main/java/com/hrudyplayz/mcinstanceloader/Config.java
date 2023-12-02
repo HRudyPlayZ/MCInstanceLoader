@@ -19,6 +19,9 @@ public class Config {
     public static boolean disableCache;
     public static boolean disableAutomaticZipCreation;
     public static int connectionTimeout;
+    public static boolean useHttpProxy;
+    public static String proxyHttpHost;
+    public static int proxyHttpPort;
 
     public static String curseforgeURL;
     public static String curseforgeAPIKey;
@@ -47,6 +50,10 @@ public class Config {
         deleteInsteadOfRenaming = config.getBoolean("Delete MCInstance directly", CATEGORY_BEHAVIOR, false, "Wheter to delete the pack.mcinstance file instead of renaming it.");
         disableStopModRepostsCheck = config.getBoolean("Disable StopModReposts check", CATEGORY_BEHAVIOR, false, "Whether to disable the StopModReposts check, used to prevent the use of malware sites. It's recommended to keep it enabled.");
         disableCache = config.getBoolean("Disable the cache system", CATEGORY_BEHAVIOR, false, "Whether to disable the cache system, forcing every resource to be downloaded regardless of the cached value.");
+
+        useHttpProxy = config.getBoolean("Use proxy", CATEGORY_BEHAVIOR, false, "This will enable proxy when downing files.");
+        proxyHttpHost = config.getString("Proxy host address", CATEGORY_BEHAVIOR, "127.0.0.1", "The proxy host address.");
+        proxyHttpPort = config.getInt("Proxy host port", CATEGORY_BEHAVIOR, 0, 0, 65535, "The proxy host port.");
 
         disableAutomaticZipCreation = config.getBoolean("Disable the automatic zipping system for the pack folder", CATEGORY_BEHAVIOR, false, "Whether to disable the automatic creation of the pack.mcinstance file from the pack folder.");
         if (deleteInsteadOfRenaming && !disableAutomaticZipCreation) disableAutomaticZipCreation = true;
