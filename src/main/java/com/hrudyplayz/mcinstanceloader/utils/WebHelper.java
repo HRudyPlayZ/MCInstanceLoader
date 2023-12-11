@@ -27,6 +27,12 @@ public class WebHelper {
     // Defines the client properties, uses Twitch UserAgents to make every website work correctly as they should.
     public static String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) twitch-desktop-electron-platform/1.0.0 Chrome/73.0.3683.121 Electron/5.0.12 Safari/537.36 desklight/8.51.0";
     public static String REFERER = "https://www.google.com";
+    static String[] ordinalSuffixes = {
+            "st",
+            "nd",
+            "rd",
+            "th"
+    };
 
     private static final SSLSocketFactory DEFAULT_HTTPS_CERTIFICATES = HttpsURLConnection.getDefaultSSLSocketFactory();
 
@@ -99,7 +105,13 @@ public class WebHelper {
             File file = new File(savePath);
             FileUtils.copyInputStreamToFile(connection.getInputStream(), file);
 
-            LogHelper.info("Successfully downloaded the file on attempt number " + (retryCount + 1) + ".");
+            if (retryCount > 0) {
+                int ordinal = 3;
+                if (retryCount % 10 != 0 && !(retryCount % 100 > 10 && retryCount % 100 < 20))
+                    ordinal = retryCount % 10;
+
+                LogHelper.info("Successfully downloaded file on " + (retryCount + 1) + ordinalSuffixes[ordinal] +  " attempt.");
+            }
 
             return true;
         }
