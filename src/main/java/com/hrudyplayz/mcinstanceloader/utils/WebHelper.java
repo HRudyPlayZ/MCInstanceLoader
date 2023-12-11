@@ -106,9 +106,11 @@ public class WebHelper {
             FileUtils.copyInputStreamToFile(connection.getInputStream(), file);
 
             if (retryCount > 0) {
-                String ordinal = retryCount % 10 < 3 ? ordinalSuffixes[(retryCount % 10)] : ordinalSuffixes[3];
+                int ordinal = 3;
+                if (retryCount % 10 != 0 && !(retryCount % 100 > 10 && retryCount % 100 < 20))
+                    ordinal = retryCount % 10;
 
-                LogHelper.info("Successfully downloaded file on " + (retryCount + 1) + ordinal +  " attempt.");
+                LogHelper.info("Successfully downloaded file on " + (retryCount + 1) + ordinalSuffixes[ordinal] +  " attempt.");
             }
 
             return true;
